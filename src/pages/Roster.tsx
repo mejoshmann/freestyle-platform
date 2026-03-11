@@ -90,8 +90,7 @@ export default function Roster() {
 
   async function handleSaveEvaluation(
     scores: { skill_id: string; skill_name: string; score: number | null }[], 
-    notes: string,
-    voiceNotes?: string[]
+    notes: string
   ) {
     if (!coach || !selectedAthlete) return
 
@@ -106,7 +105,7 @@ export default function Roster() {
     // TODO: Add voice_notes column to evaluations table
     // if (voiceNotes && voiceNotes.length > 0) insertData.voice_notes = voiceNotes
 
-    const { data, error } = await supabase.from('evaluations').insert(insertData).select()
+    const { error } = await supabase.from('evaluations').insert(insertData).select()
 
     if (error) {
       alert('Error saving evaluation: ' + error.message)

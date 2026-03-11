@@ -34,7 +34,7 @@ export default function Evaluations() {
 
 
     // Load athlete details
-    const { data: athleteData, error: athleteError } = await supabase
+    const { data: athleteData } = await supabase
       .from('athletes')
       .select('*')
       .eq('id', athleteId)
@@ -44,7 +44,7 @@ export default function Evaluations() {
     if (athleteData) setAthlete(athleteData)
 
     // Load evaluations
-    const { data: evaluationsData, error: evalError } = await supabase
+    const { data: evaluationsData } = await supabase
       .from('evaluations')
       .select('*')
       .eq('athlete_id', athleteId)

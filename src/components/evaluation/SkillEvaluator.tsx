@@ -56,7 +56,7 @@ export default function SkillEvaluator({
     setVoiceNotes(prev => [...prev, audioUrl])
   }, [])
 
-  const handleCaptureMedia = useCallback((file: File) => {
+  const handleCaptureMedia = useCallback((_file: File) => {
     // In production, upload to storage and store URL
     // File captured for upload
   }, [])
