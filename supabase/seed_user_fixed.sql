@@ -1,4 +1,6 @@
--- Use a fixed UUID
+-- Seed test user for development
+-- Creates both auth.users and coaches records with the same UUID
+
 do $$
 declare
   new_id uuid := 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
@@ -14,9 +16,11 @@ begin
     now(),
     '{"provider":"email","providers":["email"]}',
     '{"full_name":"Joshua Mann"}'
-  );
+  )
+  on conflict (id) do nothing;
 
   -- Create coach record
   insert into coaches (id, email, full_name, created_at)
-  values (new_id, 'josh.mann@freestylevancouver.ski', 'Joshua Mann', now());
+  values (new_id, 'josh.mann@freestylevancouver.ski', 'Joshua Mann', now())
+  on conflict (id) do nothing;
 end $$;

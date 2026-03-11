@@ -109,12 +109,9 @@ export default function Roster() {
     const { data, error } = await supabase.from('evaluations').insert(insertData).select()
 
     if (error) {
-      console.error('Error saving evaluation:', error)
       alert('Error saving evaluation: ' + error.message)
       return
     }
-
-    console.log('Evaluation saved:', data)
     
     // Refresh evaluation counts
     await loadData()

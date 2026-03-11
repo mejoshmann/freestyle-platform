@@ -58,7 +58,7 @@ export default function SkillEvaluator({
 
   const handleCaptureMedia = useCallback((file: File) => {
     // In production, upload to storage and store URL
-    console.log('Captured:', file.name)
+    // File captured for upload
   }, [])
 
   const handleBackToRoster = useCallback(() => {

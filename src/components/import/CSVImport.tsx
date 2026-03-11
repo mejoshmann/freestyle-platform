@@ -214,7 +214,7 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
     }
     if (parsedData.length === 0) return
     
-    console.log('Importing with coach:', coach.id)
+    
 
     setStep('importing')
     setImportProgress({ current: 0, total: parsedData.length })
@@ -253,7 +253,7 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
 
       if (error) {
         errorCount++
-        console.error('Import error for', fullName, ':', error)
+        
         importErrors.push(`${fullName}: ${error.message}`)
       } else {
         successCount++

@@ -31,7 +31,7 @@ export default function Evaluations() {
       return
     }
 
-    console.log('Loading evaluations for athlete:', athleteId, 'coach:', coach.id)
+
 
     // Load athlete details
     const { data: athleteData, error: athleteError } = await supabase
@@ -40,9 +40,7 @@ export default function Evaluations() {
       .eq('id', athleteId)
       .single()
 
-    if (athleteError) {
-      console.error('Error loading athlete:', athleteError)
-    }
+
     if (athleteData) setAthlete(athleteData)
 
     // Load evaluations
@@ -52,10 +50,7 @@ export default function Evaluations() {
       .eq('athlete_id', athleteId)
       .eq('coach_id', coach.id)
 
-    if (evalError) {
-      console.error('Error loading evaluations:', evalError)
-    }
-    console.log('Evaluations found:', evaluationsData?.length || 0, evaluationsData)
+
     if (evaluationsData) setEvaluations(evaluationsData)
     setLoading(false)
   }

@@ -91,7 +91,7 @@ export default function Templates() {
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  onSelect={() => console.log('Select template', template.id)}
+                  onSelect={() => {}}
                   onDelete={() => deleteTemplate(template.id)}
                 />
               ))}
