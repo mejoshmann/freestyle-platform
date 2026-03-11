@@ -10,7 +10,7 @@ export default function Sidebar() {
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/roster', label: 'Roster', icon: '👥' },
     { path: '/import', label: 'Import', icon: '📥' },
-    { path: '/templates', label: 'Templates', icon: '📋' },
+    { path: '/metrics', label: 'Metrics', icon: '📊' },
   ]
 
   return (

@@ -8,7 +8,7 @@ import AthleteCard from '../components/roster/AthleteCard'
 import SkillEvaluator from '../components/evaluation/SkillEvaluator'
 import { useNavigate } from 'react-router-dom'
 
-interface EvaluationTemplate {
+interface MetricsSet {
   id: string
   name: string
   categories: TemplateCategory[]
@@ -22,9 +22,9 @@ export default function Roster() {
   const [evaluationCounts, setEvaluationCounts] = useState<Record<string, number>>({})
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null)
   const [showEvaluation, setShowEvaluation] = useState(false)
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false)
-  const [templates, setTemplates] = useState<EvaluationTemplate[]>([])
-  const [selectedTemplate, setSelectedTemplate] = useState<EvaluationTemplate | null>(null)
+  const [showMetricsSelector, setShowMetricsSelector] = useState(false)
+  const [metricsSets, setMetricsSets] = useState<MetricsSet[]>([])
+  const [selectedMetricsSet, setSelectedMetricsSet] = useState<MetricsSet | null>(null)
   const [loading, setLoading] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | 'all' | null>(null)
 
@@ -75,14 +75,14 @@ export default function Roster() {
       setAthletes([])
     }
 
-    // Load custom templates
-    const { data: templatesData } = await supabase
+    // Load custom metrics sets
+    const { data: metricsData } = await supabase
       .from('evaluation_templates')
       .select('*')
       .eq('coach_id', coach.id)
     
-    if (templatesData) {
-      setTemplates(templatesData)
+    if (metricsData) {
+      setMetricsSets(metricsData)
     }
 
     setLoading(false)
@@ -223,7 +223,7 @@ export default function Roster() {
                       ]}
                       onClick={() => {
                         setSelectedAthlete(athlete)
-                        setShowTemplateSelector(true)
+                        setShowMetricsSelector(true)
                       }}
                       onDelete={() => setShowDeleteConfirm(athlete.id)}
                     />
@@ -246,23 +246,23 @@ export default function Roster() {
         </div>
       </div>
 
-      {/* Template Selector Modal */}
-      {selectedAthlete && showTemplateSelector && (
+      {/* Metrics Selector Modal */}
+      {selectedAthlete && showMetricsSelector && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-2">
               Evaluate {selectedAthlete.full_name}
             </h2>
             <p className="text-gray-500 text-sm mb-4">
-              Choose a template or use all metrics
+              Choose metrics to evaluate with
             </p>
 
             <div className="space-y-3 mb-6">
               {/* Default: All Metrics */}
               <button
                 onClick={() => {
-                  setSelectedTemplate(null)
-                  setShowTemplateSelector(false)
+                  setSelectedMetricsSet(null)
+                  setShowMetricsSelector(false)
                   setShowEvaluation(true)
                 }}
                 className="w-full p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 text-left"
@@ -271,20 +271,20 @@ export default function Roster() {
                 <p className="text-sm text-gray-500">{allSkills.length} skills from all categories</p>
               </button>
 
-              {/* Custom Templates */}
-              {templates.map(template => (
+              {/* Custom Metrics Sets */}
+              {metricsSets.map((metricsSet: MetricsSet) => (
                 <button
-                  key={template.id}
+                  key={metricsSet.id}
                   onClick={() => {
-                    setSelectedTemplate(template)
-                    setShowTemplateSelector(false)
+                    setSelectedMetricsSet(metricsSet)
+                    setShowMetricsSelector(false)
                     setShowEvaluation(true)
                   }}
                   className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left"
                 >
-                  <h3 className="font-medium text-gray-900">{template.name}</h3>
+                  <h3 className="font-medium text-gray-900">{metricsSet.name}</h3>
                   <p className="text-sm text-gray-500">
-                    {template.skills?.length || 0} metrics • {template.categories?.length || 0} categories
+                    {metricsSet.skills?.length || 0} metrics • {metricsSet.categories?.length || 0} categories
                   </p>
                 </button>
               ))}
@@ -293,7 +293,7 @@ export default function Roster() {
             <div className="flex space-x-3">
               <button
                 onClick={() => {
-                  setShowTemplateSelector(false)
+                  setShowMetricsSelector(false)
                   setSelectedAthlete(null)
                 }}
                 className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
@@ -301,10 +301,10 @@ export default function Roster() {
                 Cancel
               </button>
               <button
-                onClick={() => navigate('/templates/build')}
+                onClick={() => navigate('/metrics/build')}
                 className="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700"
               >
-                + New Template
+                + New Metrics
               </button>
             </div>
           </div>
@@ -317,18 +317,18 @@ export default function Roster() {
           <div className="w-full sm:max-w-2xl bg-white rounded-t-lg sm:rounded-lg shadow-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <SkillEvaluator
               athleteName={selectedAthlete.full_name}
-              skills={selectedTemplate?.skills || allSkills}
-              categories={selectedTemplate?.categories}
+              skills={selectedMetricsSet?.skills || allSkills}
+              categories={selectedMetricsSet?.categories}
               onSave={handleSaveEvaluation}
               onCancel={() => {
                 setSelectedAthlete(null)
                 setShowEvaluation(false)
-                setSelectedTemplate(null)
+                setSelectedMetricsSet(null)
               }}
               onBackToRoster={() => {
                 setSelectedAthlete(null)
                 setShowEvaluation(false)
-                setSelectedTemplate(null)
+                setSelectedMetricsSet(null)
               }}
             />
           </div>

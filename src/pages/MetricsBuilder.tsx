@@ -12,7 +12,7 @@ interface CustomCategory {
   isCustom: true
 }
 
-export default function TemplateBuilder() {
+export default function MetricsBuilder() {
   const { coach } = useAuth()
   const navigate = useNavigate()
   const [templateName, setTemplateName] = useState('')
@@ -52,7 +52,7 @@ export default function TemplateBuilder() {
     }
   }
 
-  async function saveTemplate() {
+  async function saveMetrics() {
     if (!coach || !templateName || selectedMetrics.length === 0) return
 
     setSaving(true)
@@ -74,14 +74,13 @@ export default function TemplateBuilder() {
     })
 
     if (error) {
-      console.error('Error saving template:', error)
-      alert('Error saving template: ' + error.message)
+      alert('Error saving metrics: ' + error.message)
       setSaving(false)
       return
     }
 
     setSaving(false)
-    navigate('/templates')
+    navigate('/metrics')
   }
 
   // Get selected categories for preview
@@ -141,13 +140,13 @@ export default function TemplateBuilder() {
   return (
     <div className="p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Build Your Template</h1>
-        <p className="text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base">Select the metrics you want to include in your evaluation</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Build Your Metrics</h1>
+        <p className="text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base">Select and customize the metrics for evaluating your athletes</p>
 
-        {/* Template Name */}
+        {/* Metrics Set Name */}
         <div className="mb-6 sm:mb-8">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Template Name
+            Metrics Set Name
           </label>
           <input
             type="text"
@@ -388,7 +387,7 @@ export default function TemplateBuilder() {
 
             {/* Save Button */}
             <button
-              onClick={saveTemplate}
+              onClick={saveMetrics}
               disabled={!templateName || selectedMetrics.length === 0 || saving}
               className="w-full mt-4 sm:mt-6 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
             >

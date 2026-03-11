@@ -3,8 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import Templates from './pages/Templates'
-import TemplateBuilder from './pages/TemplateBuilder'
+import Metrics from './pages/Metrics'
+import MetricsBuilder from './pages/MetricsBuilder'
 import Roster from './pages/Roster'
 import ImportAthletes from './pages/ImportAthletes'
 import AddAthletes from './pages/AddAthletes'
@@ -32,8 +32,8 @@ function AppContent() {
         <Route path="/import" element={<ImportAthletes />} />
         <Route path="/add-athletes" element={<AddAthletes />} />
         <Route path="/evaluations/:athleteId" element={<Evaluations />} />
-        <Route path="/templates" element={<Templates />} />
-        <Route path="/templates/build" element={<TemplateBuilder />} />
+        <Route path="/metrics" element={<Metrics />} />
+        <Route path="/metrics/build" element={<MetricsBuilder />} />
         <Route path="/slider-preview" element={<SliderPreview />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
