@@ -19,10 +19,17 @@ create policy "Coaches can update own profile"
   on coaches for update
   using (auth.uid() = id);
 
--- Allow inserts during signup
+-- Allow inserts during signup (authenticated users can create their own coach record)
 create policy "Allow coach signup"
   on coaches for insert
+  to authenticated
   with check (auth.uid() = id);
+
+-- Allow service role to insert (for triggers)
+create policy "Allow service role inserts"
+  on coaches for insert
+  to service_role
+  with check (true);
 
 -- Athletes table
 create table if not exists athletes (

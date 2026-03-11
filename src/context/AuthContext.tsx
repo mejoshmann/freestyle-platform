@@ -45,18 +45,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(email: string, password: string, fullName: string) {
-    const { data, error } = await supabase.auth.signUp({
+    // Sign up the user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
     })
-    if (error) throw error
+    if (signUpError) throw signUpError
 
-    if (data.user) {
-      await supabase.from('coaches').insert({
-        id: data.user.id,
+    // If signup succeeded, immediately sign in to get an authenticated session
+    if (signUpData.user) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        full_name: fullName,
+        password,
       })
+      
+      if (signInError) {
+        console.error('Auto sign-in failed:', signInError)
+        // Don't throw - user was created, they can manually sign in
+        return
+      }
+      
+      // Now we're authenticated, create the coach record
+      const { error: coachError } = await supabase
+        .from('coaches')
+        .upsert({
+          id: signUpData.user.id,
+          email,
+          full_name: fullName,
+        }, {
+          onConflict: 'id',
+          ignoreDuplicates: false
+        })
+      
+      if (coachError) {
+        console.error('Failed to create coach record:', coachError)
+        // Don't throw - user can still use the app
+      }
     }
   }
 
