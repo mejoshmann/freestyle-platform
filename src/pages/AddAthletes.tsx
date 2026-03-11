@@ -8,7 +8,6 @@ export default function AddAthletes() {
   const { coach } = useAuth()
   const navigate = useNavigate()
   const [availableAthletes, setAvailableAthletes] = useState<Athlete[]>([])
-  const [myAthletes, setMyAthletes] = useState<Athlete[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -23,25 +22,14 @@ export default function AddAthletes() {
       return
     }
 
-    // Load all athletes (pool)
+    // Load all athletes (master list - all coaches see all athletes)
     const { data: allAthletes } = await supabase
       .from('athletes')
       .select('*')
       .order('full_name')
 
-    // Load my current roster
-    const { data: myRoster } = await supabase
-      .from('coach_athletes')
-      .select('athlete_id')
-      .eq('coach_id', coach.id)
-
-    const myAthleteIds = new Set(myRoster?.map(r => r.athlete_id) || [])
-    
-    // Filter out athletes already on my roster
-    const available = (allAthletes || []).filter(a => !myAthleteIds.has(a.id))
-    
-    setAvailableAthletes(available)
-    setMyAthletes((allAthletes || []).filter(a => myAthleteIds.has(a.id)))
+    // All athletes are available to all coaches
+    setAvailableAthletes(allAthletes || [])
     setLoading(false)
   }
 
@@ -99,7 +87,7 @@ export default function AddAthletes() {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500">
-              {myAthletes.length} on roster
+              {availableAthletes.length} athletes
             </span>
             <button
               onClick={() => navigate('/roster')}

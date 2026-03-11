@@ -9,8 +9,8 @@ export default function Sidebar() {
   const navItems = [
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/roster', label: 'Roster', icon: '👥' },
-    { path: '/import', label: 'Import', icon: '📥' },
     { path: '/metrics', label: 'Metrics', icon: '📊' },
+    ...(coach?.is_admin ? [{ path: '/admin', label: 'Admin', icon: '⚙️' }] : []),
   ]
 
   return (

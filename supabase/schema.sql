@@ -3,6 +3,7 @@ create table if not exists coaches (
   id uuid references auth.users on delete cascade primary key,
   email text not null,
   full_name text not null,
+  is_admin boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -13,6 +14,17 @@ alter table coaches enable row level security;
 create policy "Coaches can read own profile"
   on coaches for select
   using (auth.uid() = id);
+
+-- Admins can read all coaches
+create policy "Admins can read all coaches"
+  on coaches for select
+  to authenticated
+  using (
+    exists (
+      select 1 from coaches c 
+      where c.id = auth.uid() and c.is_admin = true
+    )
+  );
 
 -- Coaches can update their own profile
 create policy "Coaches can update own profile"
@@ -31,23 +43,43 @@ create policy "Allow service role inserts"
   to service_role
   with check (true);
 
--- Athletes table
+-- Athletes table (master list - accessible to all coaches)
 create table if not exists athletes (
   id uuid default gen_random_uuid() primary key,
-  coach_id uuid references coaches(id) on delete cascade not null,
   full_name text not null,
   email text,
   date_of_birth date,
+  group_name text,  -- e.g., "SATURDAYS - CYPRESS MOUNTAIN 2026"
+  day text,        -- e.g., "SATURDAYS"
+  mountain text,   -- e.g., "CYPRESS MOUNTAIN"
+  coach_name text, -- e.g., "DEXTER D" - the coach assigned to this athlete
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Enable RLS on athletes
 alter table athletes enable row level security;
 
--- Coaches can CRUD their own athletes
-create policy "Coaches can manage their athletes"
-  on athletes for all
-  using (auth.uid() = coach_id);
+-- All authenticated coaches can view all athletes (master list)
+create policy "Coaches can view all athletes"
+  on athletes for select
+  to authenticated
+  using (true);
+
+-- All authenticated coaches can add/edit athletes
+create policy "Coaches can manage athletes"
+  on athletes for insert
+  to authenticated
+  with check (true);
+
+create policy "Coaches can update athletes"
+  on athletes for update
+  to authenticated
+  using (true);
+
+create policy "Coaches can delete athletes"
+  on athletes for delete
+  to authenticated
+  using (true);
 
 -- Evaluation Templates table
 create table if not exists evaluation_templates (

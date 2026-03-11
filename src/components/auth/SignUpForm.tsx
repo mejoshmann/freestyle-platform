@@ -9,10 +9,16 @@ export default function SignUpForm({ onSubmit, error }: SignUpFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [success, setSuccess] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await onSubmit(email, password, fullName)
+    try {
+      await onSubmit(email, password, fullName)
+      setSuccess(true)
+    } catch (err) {
+      // Error is handled by parent
+    }
   }
 
   return (
@@ -20,6 +26,13 @@ export default function SignUpForm({ onSubmit, error }: SignUpFormProps) {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-4 rounded">
+          <p className="font-bold text-lg mb-1">Thank you for signing up!</p>
+          <p className="text-sm">Please check your email and click the confirmation link to activate your account.</p>
         </div>
       )}
 

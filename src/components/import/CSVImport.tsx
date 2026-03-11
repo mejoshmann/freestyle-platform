@@ -19,6 +19,10 @@ interface ParsedAthlete {
   date_of_birth?: string
   age?: string
   category?: string
+  group_name?: string  // e.g., "SATURDAYS - CYPRESS MOUNTAIN 2026"
+  day?: string         // e.g., "SATURDAYS"
+  mountain?: string    // e.g., "CYPRESS MOUNTAIN"
+  coach_name?: string  // e.g., "DEXTER D" - the coach assigned to this athlete
   phone?: string
   phone2?: string
   allergies?: string
@@ -36,7 +40,7 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
   const [importResults, setImportResults] = useState<{ success: number; failed: number } | null>(null)
 
-  function parseData(headers: string[], rows: any[][]): ParsedAthlete[] {
+  function parseData(headers: string[], rows: any[][], groupName?: string, day?: string, mountain?: string): ParsedAthlete[] {
     // Find column indices
     const firstNameIndex = headers.findIndex(h => h.includes('first'))
     const lastNameIndex = headers.findIndex(h => h.includes('last'))
@@ -96,6 +100,9 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
         }
       })
 
+      // The last value in the row is the coach name (added during Excel parsing)
+      const coachName = values.length > headers.length ? values[values.length - 1] : undefined
+
       athletes.push({
         full_name: fullName,
         first_name: firstNameIndex >= 0 ? values[firstNameIndex] : fullName.split(' ')[0],
@@ -107,6 +114,10 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
         date_of_birth: dobIndex >= 0 ? values[dobIndex] : undefined,
         age: ageIndex >= 0 ? values[ageIndex] : undefined,
         category: categoryIndex >= 0 ? values[categoryIndex] : undefined,
+        group_name: groupName,
+        day: day,
+        mountain: mountain,
+        coach_name: coachName,
         phone: phoneIndex >= 0 ? values[phoneIndex] : undefined,
         phone2: phone2Index >= 0 ? values[phone2Index] : undefined,
         allergies: allergiesIndex >= 0 ? values[allergiesIndex] : undefined,
@@ -146,9 +157,37 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
       return result
     }
 
+    // Extract group info from first row (e.g., "CYPRESS MOUNTAIN - SATURDAYS 2026")
+    let groupName = ''
+    let day = ''
+    let mountain = ''
+    
+    // Parse the first line to get just the first cell (group name)
+    const firstLineParsed = parseLine(lines[0].trim())
+    const firstCell = firstLineParsed[0] || ''
+    
+    console.log('First cell:', firstCell)
+    
+    if (firstCell.includes('MOUNTAIN') || firstCell.includes('MTN')) {
+      groupName = firstCell
+      // Try to extract mountain and day from patterns like "CYPRESS MOUNTAIN - SATURDAYS 2026"
+      // The format is: MOUNTAIN NAME - DAY YEAR
+      const match = firstCell.match(/^(.+?\s+MOUNTAIN)\s*-\s*(.+?)\s*(\d{4})?$/i)
+      console.log('Match result:', match)
+      if (match) {
+        mountain = match[1].trim()
+        day = match[2].trim()
+      } else {
+        // Fallback: just use the whole line as group name
+        mountain = firstCell
+      }
+    }
+    
+    console.log('Extracted:', { groupName, mountain, day })
+
     // Find the header row (look for "first name" or "last name" or "#" column)
     let headerIndex = 0
-    for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
       const line = lines[i].toLowerCase()
       if (line.includes('first name') || line.includes('last name') || line.includes(',reg id,')) {
         headerIndex = i
@@ -157,11 +196,41 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
     }
 
     const headers = parseLine(lines[headerIndex]).map(h => h.toLowerCase().replace(/"/g, ''))
-    const rows = lines.slice(headerIndex + 1)
-      .filter(line => line.trim() !== '' && !line.startsWith('DEXTER')) // Skip empty lines and DEXTER row
-      .map(line => parseLine(line).map(v => v.replace(/"/g, '')))
     
-    return parseData(headers, rows)
+    // Process rows and track coach names
+    const processedRows: any[][] = []
+    let currentCoachName = ''
+    
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+      
+      const parsedLine = parseLine(line).map(v => v.replace(/"/g, ''))
+      const firstCell = parsedLine[0] || ''
+      
+      // Check if this is a coach name row (like "DEXTER D" - all caps, short, not a data row)
+      // Pattern: 1-3 words, all uppercase letters, first column only has content
+      if (firstCell && 
+          firstCell.match(/^[A-Z][A-Z\s]+$/) && 
+          !firstCell.match(/^\d+$/) &&
+          parsedLine.slice(1).every(cell => !cell || cell === '')) {
+        currentCoachName = firstCell
+        continue
+      }
+      
+      // Skip rows that don't have a name (first name or last name columns)
+      const firstNameIndex = headers.findIndex(h => h.includes('first'))
+      const lastNameIndex = headers.findIndex(h => h.includes('last'))
+      const hasName = (firstNameIndex >= 0 && parsedLine[firstNameIndex]) || 
+                      (lastNameIndex >= 0 && parsedLine[lastNameIndex])
+      
+      if (!hasName) continue
+      
+      // Add row with coach name appended
+      processedRows.push([...parsedLine, currentCoachName])
+    }
+    
+    return parseData(headers, processedRows, groupName, day, mountain)
   }
 
   function parseExcel(data: ArrayBuffer): ParsedAthlete[] {
@@ -171,10 +240,72 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
     
     if (jsonData.length < 2) return []
 
-    const headers = jsonData[0].map((h: any) => String(h).trim().toLowerCase())
-    const rows = jsonData.slice(1)
+    // Extract group info from first few rows (e.g., "SATURDAYS - CYPRESS MOUNTAIN 2026")
+    let groupName = ''
+    let day = ''
+    let mountain = ''
     
-    return parseData(headers, rows)
+    for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+      const row = jsonData[i]
+      if (row && row[0]) {
+        const cellValue = String(row[0]).trim()
+        // Look for patterns like "SATURDAYS - CYPRESS MOUNTAIN 2026"
+        if (/\b(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|SATURDAYS|SUNDAYS)s?\b.*-\b.*\b(MOUNTAIN|MTN|MT)\b/i.test(cellValue)) {
+          groupName = cellValue
+          // Extract day and mountain
+          const parts = cellValue.split('-').map(p => p.trim())
+          if (parts.length >= 2) {
+            day = parts[0]
+            mountain = parts[1].replace(/\s+\d{4}$/, '').trim() // Remove year if present
+          }
+          break
+        }
+      }
+    }
+
+    // Find the header row (look for "first name" or "last name" or "#" column)
+    let headerIndex = 0
+    for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
+      const row = jsonData[i]
+      if (row && row.some((cell: any) => {
+        const cellStr = String(cell).toLowerCase()
+        return cellStr.includes('first name') || cellStr.includes('last name') || cellStr === '#'
+      })) {
+        headerIndex = i
+        break
+      }
+    }
+
+    const headers = jsonData[headerIndex].map((h: any) => String(h).trim().toLowerCase())
+    
+    // Process rows and track coach names (highlighted in grey like "DEXTER D")
+    const processedRows: any[][] = []
+    let currentCoachName = ''
+    
+    for (let i = headerIndex + 1; i < jsonData.length; i++) {
+      const row = jsonData[i]
+      if (!row || row.length === 0) continue
+      
+      const firstCell = String(row[0] || '').trim()
+      
+      // Skip empty rows
+      if (!firstCell && !row.some(cell => cell && String(cell).trim() !== '')) continue
+      
+      // Check if this is a coach name row (single name, no reg ID, appears before athletes)
+      // Pattern: single word or two words, no numbers, not a data row
+      if (firstCell && 
+          !firstCell.match(/^\d+$/) && 
+          firstCell.match(/^[A-Z\s]+$/) &&
+          row.filter(cell => cell && String(cell).trim() !== '').length <= 2) {
+        currentCoachName = firstCell
+        continue
+      }
+      
+      // Add row with coach name
+      processedRows.push([...row, currentCoachName])
+    }
+    
+    return parseData(headers, processedRows, groupName, day, mountain)
   }
 
   function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -239,7 +370,6 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
       // Try to insert with basic fields only
       // Note: Only using columns that exist in the database
       const insertData: any = {
-        coach_id: coach.id,
         full_name: fullName
       }
       
@@ -247,7 +377,10 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
       // These columns must exist in your Supabase athletes table
       if (athlete.date_of_birth) insertData.date_of_birth = athlete.date_of_birth
       if (athlete.email) insertData.email = athlete.email
-      // Note: group_name column doesn't exist - category stored in memory only for now
+      if (athlete.group_name) insertData.group_name = athlete.group_name
+      if (athlete.day) insertData.day = athlete.day
+      if (athlete.mountain) insertData.mountain = athlete.mountain
+      if (athlete.coach_name) insertData.coach_name = athlete.coach_name
       
       const { error } = await supabase.from('athletes').insert(insertData)
 

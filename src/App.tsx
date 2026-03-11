@@ -6,9 +6,8 @@ import Dashboard from './pages/Dashboard'
 import Metrics from './pages/Metrics'
 import MetricsBuilder from './pages/MetricsBuilder'
 import Roster from './pages/Roster'
-import ImportAthletes from './pages/ImportAthletes'
-import AddAthletes from './pages/AddAthletes'
 import Evaluations from './pages/Evaluations'
+import AdminPanel from './pages/AdminPanel'
 import SliderPreview from './pages/SliderPreview'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import './App.css'
@@ -29,8 +28,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/roster" element={<Roster />} />
-        <Route path="/import" element={<ImportAthletes />} />
-        <Route path="/add-athletes" element={<AddAthletes />} />
+        <Route path="/admin" element={<AdminPanel />} />
         <Route path="/evaluations/:athleteId" element={<Evaluations />} />
         <Route path="/metrics" element={<Metrics />} />
         <Route path="/metrics/build" element={<MetricsBuilder />} />

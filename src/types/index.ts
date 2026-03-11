@@ -2,15 +2,19 @@ export interface Coach {
   id: string
   email: string
   full_name: string
+  is_admin?: boolean
   created_at: string
 }
 
 export interface Athlete {
   id: string
-  coach_id: string
   full_name: string
   email?: string
   date_of_birth?: string
+  group_name?: string
+  day?: string
+  mountain?: string
+  coach_name?: string
   metadata?: {
     first_name?: string
     last_name?: string

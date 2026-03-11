@@ -27,6 +27,11 @@ export default function Roster() {
   const [selectedMetricsSet, setSelectedMetricsSet] = useState<MetricsSet | null>(null)
   const [loading, setLoading] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | 'all' | null>(null)
+  
+  // Filters
+  const [filterMountain, setFilterMountain] = useState<string>('')
+  const [filterDay, setFilterDay] = useState<string>('')
+  const [filterCoach, setFilterCoach] = useState<string>('')
 
   // All skills from all categories (default)
   const allSkills: Skill[] = defaultTemplates.flatMap(t => t.skills)
@@ -41,38 +46,28 @@ export default function Roster() {
       return
     }
 
-    // Load athletes through coach_athletes join table
-    const { data: coachAthletes } = await supabase
-      .from('coach_athletes')
-      .select('athlete_id')
-      .eq('coach_id', coach.id)
-
-    if (coachAthletes && coachAthletes.length > 0) {
-      const athleteIds = coachAthletes.map(ca => ca.athlete_id)
-      const { data: athletesData } = await supabase
-        .from('athletes')
-        .select('*')
-        .in('id', athleteIds)
-        .order('full_name')
+    // Load ALL athletes (master list for all coaches)
+    const { data: athletesData } = await supabase
+      .from('athletes')
+      .select('*')
+      .order('full_name')
+    
+    if (athletesData) {
+      setAthletes(athletesData)
       
-      if (athletesData) {
-        setAthletes(athletesData)
-        
-        // Fetch evaluation counts for each athlete
-        const { data: evaluationsData } = await supabase
-          .from('evaluations')
-          .select('athlete_id')
-          .eq('coach_id', coach.id)
-          .in('athlete_id', athleteIds)
-        
-        const counts: Record<string, number> = {}
-        evaluationsData?.forEach(evaluation => {
-          counts[evaluation.athlete_id] = (counts[evaluation.athlete_id] || 0) + 1
-        })
-        setEvaluationCounts(counts)
-      }
-    } else {
-      setAthletes([])
+      // Fetch evaluation counts for each athlete (for this coach)
+      const athleteIds = athletesData.map(a => a.id)
+      const { data: evaluationsData } = await supabase
+        .from('evaluations')
+        .select('athlete_id')
+        .eq('coach_id', coach.id)
+        .in('athlete_id', athleteIds)
+      
+      const counts: Record<string, number> = {}
+      evaluationsData?.forEach(evaluation => {
+        counts[evaluation.athlete_id] = (counts[evaluation.athlete_id] || 0) + 1
+      })
+      setEvaluationCounts(counts)
     }
 
     // Load custom metrics sets
@@ -152,6 +147,19 @@ export default function Roster() {
   }
 
 
+  // Compute unique filter values
+  const uniqueMountains = Array.from(new Set(athletes.map(a => a.mountain).filter(Boolean))).sort()
+  const uniqueDays = Array.from(new Set(athletes.map(a => a.day).filter(Boolean))).sort()
+  const uniqueCoaches = Array.from(new Set(athletes.map(a => a.coach_name).filter(Boolean))).sort()
+
+  // Filter athletes
+  const filteredAthletes = athletes.filter(athlete => {
+    if (filterMountain && athlete.mountain !== filterMountain) return false
+    if (filterDay && athlete.day !== filterDay) return false
+    if (filterCoach && athlete.coach_name !== filterCoach) return false
+    return true
+  })
+
   if (loading) {
     return (
       <div className="p-8">
@@ -169,7 +177,7 @@ export default function Roster() {
             <h2 className="text-2xl font-bold text-gray-900">My Roster</h2>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">
-                {athletes.length} athletes
+                {filteredAthletes.length} athletes
               </span>
               {athletes.length > 0 && (
                 <button 
@@ -194,32 +202,103 @@ export default function Roster() {
             </div>
           </div>
 
+          {/* Filters */}
+          {athletes.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-4 mb-6">
+              <div className="flex flex-wrap gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mountain</label>
+                  <select
+                    value={filterMountain}
+                    onChange={(e) => setFilterMountain(e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                  >
+                    <option value="">All Mountains</option>
+                    {uniqueMountains.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
+                  <select
+                    value={filterDay}
+                    onChange={(e) => setFilterDay(e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                  >
+                    <option value="">All Days</option>
+                    {uniqueDays.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Coach</label>
+                  <select
+                    value={filterCoach}
+                    onChange={(e) => setFilterCoach(e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                  >
+                    <option value="">All Coaches</option>
+                    {uniqueCoaches.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                {(filterMountain || filterDay || filterCoach) && (
+                  <div className="flex items-end">
+                    <button
+                      onClick={() => {
+                        setFilterMountain('')
+                        setFilterDay('')
+                        setFilterCoach('')
+                      }}
+                      className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
 
 
           {/* Athletes Grid */}
-          {athletes.length === 0 ? (
+          {filteredAthletes.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow px-4">
-              <p className="text-gray-500 mb-4">No athletes in your roster yet.</p>
-              <button
-                onClick={() => navigate('/import')}
-                className="inline-block py-3 sm:py-2 px-4 bg-blue-600 text-white rounded-lg sm:rounded hover:bg-blue-700"
-              >
-                Import Athletes
-              </button>
+              <p className="text-gray-500 mb-4">
+                {athletes.length === 0 ? 'No athletes in your roster yet.' : 'No athletes match the selected filters.'}
+              </p>
+              {athletes.length === 0 && (
+                <button
+                  onClick={() => navigate('/import')}
+                  className="inline-block py-3 sm:py-2 px-4 bg-blue-600 text-white rounded-lg sm:rounded hover:bg-blue-700"
+                >
+                  Import Athletes
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {athletes.map(athlete => {
+              {filteredAthletes.map(athlete => {
                 const evalCount = evaluationCounts[athlete.id] || 0
+                const stats = [
+                  { label: 'Age', value: athlete.date_of_birth ? calculateAge(athlete.date_of_birth) : 'N/A' },
+                  { label: 'Evaluations', value: String(evalCount) },
+                ]
+                // Add group info if available
+                if (athlete.mountain) stats.push({ label: 'Mountain', value: athlete.mountain })
+                if (athlete.day) stats.push({ label: 'Day', value: athlete.day })
+                if (athlete.coach_name) stats.push({ label: 'Coach', value: athlete.coach_name })
+                
                 return (
                   <div key={athlete.id} className="relative">
                     <AthleteCard
                       id={athlete.id}
                       name={athlete.full_name}
-                      stats={[
-                        { label: 'Age', value: athlete.date_of_birth ? calculateAge(athlete.date_of_birth) : 'N/A' },
-                        { label: 'Evaluations', value: String(evalCount) },
-                      ]}
+                      stats={stats}
                       onClick={() => {
                         setSelectedAthlete(athlete)
                         setShowMetricsSelector(true)
