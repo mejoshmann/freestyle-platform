@@ -38,10 +38,15 @@ export default function SkillsList({ skills, categories, scores, onScoreChange }
           <div className="space-y-3">
             {category.skills.map((skill) => {
               const scoreIndex = skills.findIndex(s => s.id === skill.id)
+              // Add category name to skill for Yes/No detection
+              const skillWithCategory = {
+                ...skill,
+                name: `${category.name}: ${skill.name}`
+              }
               return (
                 <SkillSlider
                   key={skill.id}
-                  skill={skill}
+                  skill={skillWithCategory}
                   value={scores[scoreIndex]?.score ?? null}
                   onChange={(value) => onScoreChange(skill.id, value)}
                 />

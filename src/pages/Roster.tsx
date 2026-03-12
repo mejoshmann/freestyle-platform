@@ -32,6 +32,10 @@ export default function Roster() {
   const [filterMountain, setFilterMountain] = useState<string>('')
   const [filterDay, setFilterDay] = useState<string>('')
   const [filterCoach, setFilterCoach] = useState<string>('')
+  
+  // View mode: 'my roster' or 'all athletes'
+  const [viewMode, setViewMode] = useState<'my roster' | 'all athletes'>('my roster')
+  const [myRosterIds, setMyRosterIds] = useState<Set<string>>(new Set())
 
   // All skills from all categories (default)
   const allSkills: Skill[] = defaultTemplates.flatMap(t => t.skills)
@@ -69,6 +73,16 @@ export default function Roster() {
       })
       setEvaluationCounts(counts)
     }
+    
+    // Load this coach's roster selections
+    const { data: rosterData } = await supabase
+      .from('coach_roster')
+      .select('athlete_id')
+      .eq('coach_id', coach.id)
+    
+    if (rosterData) {
+      setMyRosterIds(new Set(rosterData.map(r => r.athlete_id)))
+    }
 
     // Load custom metrics sets
     const { data: metricsData } = await supabase
@@ -100,10 +114,34 @@ export default function Roster() {
     // TODO: Add voice_notes column to evaluations table
     // if (voiceNotes && voiceNotes.length > 0) insertData.voice_notes = voiceNotes
 
-    const { error } = await supabase.from('evaluations').insert(insertData).select()
+    const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
 
     if (error) {
       alert('Error saving evaluation: ' + error.message)
+      return
+    }
+    
+    console.log('Evaluation saved:', evaluationData)
+    
+    // Create report card for admin review
+    if (evaluationData && evaluationData[0]) {
+      console.log('Creating report card for evaluation:', evaluationData[0].id)
+      const { data: reportCardData, error: reportCardError } = await supabase.from('report_cards').insert({
+        evaluation_id: evaluationData[0].id,
+        athlete_id: selectedAthlete.id,
+        coach_id: coach.id,
+        status: 'pending'
+      }).select()
+      
+      if (reportCardError) {
+        console.error('Error creating report card:', reportCardError)
+        alert('Evaluation saved but report card creation failed: ' + reportCardError.message)
+      } else {
+        console.log('Report card created:', reportCardData)
+      }
+    } else {
+      console.error('No evaluation data returned after insert')
+      alert('Error: Evaluation was not saved properly')
       return
     }
     
@@ -112,21 +150,36 @@ export default function Roster() {
     
     setSelectedAthlete(null)
     setShowEvaluation(false)
-    alert('Evaluation saved successfully!')
+    alert('Evaluation submitted for admin review!')
   }
 
-  async function deleteAthlete(athleteId: string) {
+  async function addToMyRoster(athleteId: string) {
     if (!coach) return
     
-    // Remove from coach_athletes (not delete the athlete)
     const { error } = await supabase
-      .from('coach_athletes')
+      .from('coach_roster')
+      .insert({ coach_id: coach.id, athlete_id: athleteId })
+    
+    if (!error) {
+      setMyRosterIds(prev => new Set([...prev, athleteId]))
+    }
+  }
+
+  async function removeFromMyRoster(athleteId: string) {
+    if (!coach) return
+    
+    const { error } = await supabase
+      .from('coach_roster')
       .delete()
       .eq('coach_id', coach.id)
       .eq('athlete_id', athleteId)
 
     if (!error) {
-      setAthletes(prev => prev.filter(a => a.id !== athleteId))
+      setMyRosterIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(athleteId)
+        return newSet
+      })
     }
     setShowDeleteConfirm(null)
   }
@@ -147,13 +200,17 @@ export default function Roster() {
   }
 
 
-  // Compute unique filter values
-  const uniqueMountains = Array.from(new Set(athletes.map(a => a.mountain).filter(Boolean))).sort()
-  const uniqueDays = Array.from(new Set(athletes.map(a => a.day).filter(Boolean))).sort()
-  const uniqueCoaches = Array.from(new Set(athletes.map(a => a.coach_name).filter(Boolean))).sort()
+  // Compute unique filter values (from all athletes or just my roster)
+  const athletesToFilter = viewMode === 'my roster' 
+    ? athletes.filter(a => myRosterIds.has(a.id))
+    : athletes
+  
+  const uniqueMountains = Array.from(new Set(athletesToFilter.map(a => a.mountain).filter(Boolean))).sort()
+  const uniqueDays = Array.from(new Set(athletesToFilter.map(a => a.day).filter(Boolean))).sort()
+  const uniqueCoaches = Array.from(new Set(athletesToFilter.map(a => a.coach_name).filter(Boolean))).sort()
 
   // Filter athletes
-  const filteredAthletes = athletes.filter(athlete => {
+  const filteredAthletes = athletesToFilter.filter(athlete => {
     if (filterMountain && athlete.mountain !== filterMountain) return false
     if (filterDay && athlete.day !== filterDay) return false
     if (filterCoach && athlete.coach_name !== filterCoach) return false
@@ -174,12 +231,39 @@ export default function Roster() {
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">My Roster</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {viewMode === 'my roster' ? 'My Roster' : 'All Athletes'}
+              </h2>
+              {/* View Mode Toggle */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('my roster')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'my roster'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  My Roster ({myRosterIds.size})
+                </button>
+                <button
+                  onClick={() => setViewMode('all athletes')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'all athletes'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  All Athletes ({athletes.length})
+                </button>
+              </div>
+            </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">
                 {filteredAthletes.length} athletes
               </span>
-              {athletes.length > 0 && (
+              {viewMode === 'my roster' && myRosterIds.size > 0 && (
                 <button 
                   onClick={() => setShowDeleteConfirm('all')}
                   className="py-2 px-4 border border-red-300 text-red-600 rounded hover:bg-red-50"
@@ -187,18 +271,6 @@ export default function Roster() {
                   Clear All
                 </button>
               )}
-              <button 
-                onClick={() => navigate('/add-athletes')}
-                className="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                + Add Athletes
-              </button>
-              <button 
-                onClick={() => navigate('/import')}
-                className="py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Import
-              </button>
             </div>
           </div>
 
@@ -269,14 +341,16 @@ export default function Roster() {
           {filteredAthletes.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow px-4">
               <p className="text-gray-500 mb-4">
-                {athletes.length === 0 ? 'No athletes in your roster yet.' : 'No athletes match the selected filters.'}
+                {viewMode === 'my roster' 
+                  ? 'No athletes in your roster yet. Switch to "All Athletes" to add some!'
+                  : 'No athletes match the selected filters.'}
               </p>
-              {athletes.length === 0 && (
+              {viewMode === 'my roster' && athletes.length > 0 && (
                 <button
-                  onClick={() => navigate('/import')}
+                  onClick={() => setViewMode('all athletes')}
                   className="inline-block py-3 sm:py-2 px-4 bg-blue-600 text-white rounded-lg sm:rounded hover:bg-blue-700"
                 >
-                  Import Athletes
+                  Browse All Athletes
                 </button>
               )}
             </div>
@@ -284,6 +358,7 @@ export default function Roster() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredAthletes.map(athlete => {
                 const evalCount = evaluationCounts[athlete.id] || 0
+                const isInMyRoster = myRosterIds.has(athlete.id)
                 const stats = [
                   { label: 'Age', value: athlete.date_of_birth ? calculateAge(athlete.date_of_birth) : 'N/A' },
                   { label: 'Evaluations', value: String(evalCount) },
@@ -303,8 +378,28 @@ export default function Roster() {
                         setSelectedAthlete(athlete)
                         setShowMetricsSelector(true)
                       }}
-                      onDelete={() => setShowDeleteConfirm(athlete.id)}
+                      onDelete={viewMode === 'my roster' ? () => setShowDeleteConfirm(athlete.id) : undefined}
                     />
+                    {/* Add/Remove button for All Athletes view */}
+                    {viewMode === 'all athletes' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (isInMyRoster) {
+                            removeFromMyRoster(athlete.id)
+                          } else {
+                            addToMyRoster(athlete.id)
+                          }
+                        }}
+                        className={`absolute top-2 right-2 text-xs px-2 py-1 rounded ${
+                          isInMyRoster
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                        }`}
+                      >
+                        {isInMyRoster ? '✓ Added' : '+ Add'}
+                      </button>
+                    )}
                     {evalCount > 0 && (
                       <button
                         onClick={(e) => {
@@ -437,12 +532,12 @@ export default function Roster() {
                   if (showDeleteConfirm === 'all') {
                     deleteAllAthletes()
                   } else {
-                    deleteAthlete(showDeleteConfirm)
+                    removeFromMyRoster(showDeleteConfirm)
                   }
                 }}
                 className="flex-1 py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700"
               >
-                Delete
+                Remove
               </button>
             </div>
           </div>

@@ -68,4 +68,27 @@ export const defaultTemplates: TemplateDefinition[] = [
       { id: 'park-wall', name: 'Wall Features', description: 'Wall ride and quarter pipe skills' },
     ],
   },
+  {
+    name: 'Suggested Training',
+    description: 'Recommended training programs and activities',
+    skills: [
+      { id: 'training-spring-trampoline', name: 'Spring/Summer: Trampoline', description: 'Trampoline training during spring and summer' },
+      { id: 'training-spring-dryland', name: 'Spring/Summer: Dryland', description: 'Dryland training during spring and summer' },
+      { id: 'training-spring-water', name: 'Spring/Summer: Water Ramps', description: 'Water ramp training during spring and summer' },
+      { id: 'training-fall-trampoline', name: 'Fall: Trampoline', description: 'Trampoline training during fall' },
+      { id: 'training-fall-dryland', name: 'Fall: Dryland', description: 'Dryland training during fall' },
+      { id: 'training-fall-water', name: 'Fall: Water Ramps', description: 'Water ramp training during fall' },
+    ],
+  },
+  {
+    name: 'Programs for Next Season',
+    description: 'Recommended programs for next season',
+    skills: [
+      { id: 'program-fundamentalz', name: 'FUNdamentalz', description: 'Entry-level freestyle program' },
+      { id: 'program-freestylerz', name: 'FreestylerZ', description: 'Intermediate freestyle program' },
+      { id: 'program-night', name: 'Night Riders', description: 'Evening training program' },
+      { id: 'program-girlstylerz', name: 'GirlstylerZ', description: 'Girls freestyle program' },
+      { id: 'program-dev', name: 'DEV Team (Invite Required)', description: 'Development team - invitation only' },
+    ],
+  },
 ]
