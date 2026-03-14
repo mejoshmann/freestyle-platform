@@ -52,8 +52,14 @@ export default function SkillEvaluator({
     onSave(evaluatedScores, notes, voiceNotes)
   }, [scores, notes, voiceNotes, onSave])
 
-  const handleVoiceNote = useCallback((audioUrl: string) => {
-    setVoiceNotes(prev => [...prev, audioUrl])
+  const handleVoiceNote = useCallback((audioUrl: string, transcription?: string) => {
+    setVoiceNotes(prev => {
+      if (transcription) {
+        // Append transcription to notes automatically
+        setNotes(n => n ? `${n}\n\n[Voice] ${transcription}` : `[Voice] ${transcription}`)
+      }
+      return [...prev, audioUrl]
+    })
   }, [])
 
   const handleCaptureMedia = useCallback((_file: File) => {

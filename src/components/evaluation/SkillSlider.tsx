@@ -13,10 +13,15 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
   const isSkipped = value === null
   
   // Check if this skill should use Yes/No (based on skill name containing category)
-  const isYesNoSkill = yesNoCategories.some(cat => 
-    skill.name.toLowerCase().includes(cat.toLowerCase()) ||
-    skill.id.toLowerCase().includes(cat.toLowerCase().replace(/\s+/g, '-'))
-  )
+  const skillNameLower = skill.name.toLowerCase()
+  const skillIdLower = skill.id.toLowerCase()
+  
+  const isYesNoSkill = yesNoCategories.some(cat => {
+    const catLower = cat.toLowerCase()
+    return skillNameLower.includes(catLower) || 
+           skillIdLower.startsWith('training-') || 
+           skillIdLower.startsWith('program-')
+  })
   
   // For Yes/No skills, default to No (1) instead of 3
   const displayValue = value ?? '-'

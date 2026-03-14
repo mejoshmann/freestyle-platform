@@ -63,6 +63,7 @@ export interface Evaluation {
   skill_scores: SkillScore[]
   notes?: string
   voice_notes?: string[]
+  transcribed_notes?: string
   evaluated_at: string
 }
 
@@ -70,4 +71,15 @@ export interface SkillScore {
   skill_id: string
   skill_name: string
   score: number | null  // null = not evaluated/skipped
+}
+
+export interface AthleteVideo {
+  id: string
+  athlete_id: string
+  coach_id?: string
+  storage_path: string
+  public_url: string
+  description?: string
+  tags: string[]
+  created_at: string
 }
