@@ -3,12 +3,9 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import Metrics from './pages/Metrics'
-import MetricsBuilder from './pages/MetricsBuilder'
 import Roster from './pages/Roster'
 import Evaluations from './pages/Evaluations'
 import AdminPanel from './pages/AdminPanel'
-import SliderPreview from './pages/SliderPreview'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import './App.css'
 
@@ -30,9 +27,6 @@ function AppContent() {
         <Route path="/roster" element={<Roster />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/evaluations/:athleteId" element={<Evaluations />} />
-        <Route path="/metrics" element={<Metrics />} />
-        <Route path="/metrics/build" element={<MetricsBuilder />} />
-        <Route path="/slider-preview" element={<SliderPreview />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

@@ -11,19 +11,9 @@ export const defaultTemplates: TemplateDefinition[] = [
     name: 'Moguls',
     description: 'Mogul skiing evaluation',
     skills: [
-      { id: 'moguls-turns', name: 'Turns', description: 'Quality of turns through moguls' },
-      { id: 'moguls-air', name: 'Air', description: 'Air awareness and control' },
-      { id: 'moguls-speed', name: 'Speed', description: 'Speed control and maintenance' },
-    ],
-  },
-  {
-    name: 'Aerials',
-    description: 'Aerial skiing evaluation',
-    skills: [
-      { id: 'aerials-takeoff', name: 'Take Off', description: 'Quality of jump takeoff' },
-      { id: 'aerials-air', name: 'Air', description: 'Air awareness and position' },
-      { id: 'aerials-form', name: 'Form', description: 'Body form during trick' },
-      { id: 'aerials-landing', name: 'Landing', description: 'Landing stability and control' },
+      { id: 'moguls-stance', name: 'Stance', description: 'Body position and balance' },
+      { id: 'moguls-shape', name: 'Shape', description: 'Quality of turns through moguls' },
+      { id: 'moguls-absorption', name: 'Absorption', description: 'Absorption and extension technique' },
     ],
   },
   {
@@ -31,8 +21,7 @@ export const defaultTemplates: TemplateDefinition[] = [
     description: 'Big Air skiing evaluation',
     skills: [
       { id: 'bigair-takeoff', name: 'Take Off', description: 'Quality of jump takeoff' },
-      { id: 'bigair-difficulty', name: 'Difficulty of Trick', description: 'Complexity of trick performed' },
-      { id: 'bigair-execution', name: 'Execution', description: 'Clean execution of trick' },
+      { id: 'bigair-extension', name: 'Extension', description: 'Body extension in the air' },
       { id: 'bigair-amplitude', name: 'Amplitude', description: 'Height and distance achieved' },
       { id: 'bigair-landing', name: 'Landing', description: 'Landing stability and control' },
     ],
@@ -41,9 +30,10 @@ export const defaultTemplates: TemplateDefinition[] = [
     name: 'Freeskiing',
     description: 'Freeskiing evaluation',
     skills: [
+      { id: 'freeski-balance', name: 'Balance', description: 'Overall balance on skis' },
       { id: 'freeski-switch', name: 'Switch Skiing', description: 'Ability to ski switch (backwards)' },
       { id: 'freeski-switch-stops', name: 'Controlled Stops', description: 'Controlled stops while skiing switch' },
-      { id: 'freeski-switch-turns', name: 'Connected Turns', description: 'Linked turns while skiing switch' },
+      { id: 'freeski-turn-shape', name: 'Turn Shape / Carving', description: 'Linked turns while skiing switch' },
       { id: 'freeski-spinning', name: 'Spinning on Snow', description: '360s and spins on flat snow' },
       { id: 'freeski-control', name: 'Skiing with Control', description: 'Overall control and style' },
     ],
@@ -52,10 +42,7 @@ export const defaultTemplates: TemplateDefinition[] = [
     name: 'Jumping',
     description: 'Jumping evaluation',
     skills: [
-      { id: 'jump-takeoff', name: 'Take Off', description: 'Quality of jump takeoff' },
       { id: 'jump-spinning', name: 'Spinning', description: 'Spin control and rotation' },
-      { id: 'jump-air', name: 'Air', description: 'Air awareness and position' },
-      { id: 'jump-landing', name: 'Landing', description: 'Landing stability and control' },
     ],
   },
   {
@@ -72,12 +59,10 @@ export const defaultTemplates: TemplateDefinition[] = [
     name: 'Suggested Training',
     description: 'Recommended training programs and activities',
     skills: [
-      { id: 'training-spring-trampoline', name: 'Spring/Summer: Trampoline', description: 'Trampoline training during spring and summer' },
-      { id: 'training-spring-dryland', name: 'Spring/Summer: Dryland', description: 'Dryland training during spring and summer' },
-      { id: 'training-spring-water', name: 'Spring/Summer: Water Ramps', description: 'Water ramp training during spring and summer' },
-      { id: 'training-fall-trampoline', name: 'Fall: Trampoline', description: 'Trampoline training during fall' },
-      { id: 'training-fall-dryland', name: 'Fall: Dryland', description: 'Dryland training during fall' },
-      { id: 'training-fall-water', name: 'Fall: Water Ramps', description: 'Water ramp training during fall' },
+      { id: 'training-whistler-spring', name: 'Whistler Spring Camp', description: 'Spring training camp at Whistler' },
+      { id: 'training-spring-trampoline', name: 'Trampoline', description: 'Trampoline training' },
+      { id: 'training-spring-dryland', name: 'Dryland', description: 'Dryland training' },
+      { id: 'training-spring-water', name: 'Water Ramps', description: 'Water ramp training' },
     ],
   },
   {

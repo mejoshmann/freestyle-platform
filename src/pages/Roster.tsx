@@ -473,12 +473,6 @@ export default function Roster() {
               >
                 Cancel
               </button>
-              <button
-                onClick={() => navigate('/metrics/build')}
-                className="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                + New Metrics
-              </button>
             </div>
           </div>
         </div>

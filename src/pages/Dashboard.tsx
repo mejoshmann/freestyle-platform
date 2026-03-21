@@ -125,16 +125,11 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div className="mb-8">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DashboardCard
             title="My Roster"
             description="View athletes and start evaluations"
             onClick={() => navigate('/roster')}
-          />
-          <DashboardCard
-            title="Metrics Builder"
-            description="Manage your performance metrics templates"
-            onClick={() => navigate('/metrics')}
           />
           <DashboardCard
             title="View Evaluations"
@@ -158,12 +153,6 @@ export default function Dashboard() {
             <p className="text-sm text-gray-500">Evaluations Today</p>
             <p className="text-3xl font-bold text-green-600 mt-2">
               {loading ? '--' : stats.evaluationsToday}
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-500">My Metrics</p>
-            <p className="text-3xl font-bold text-purple-600 mt-2">
-              {loading ? '--' : stats.templates}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
