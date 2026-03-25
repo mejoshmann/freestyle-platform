@@ -1,13 +1,12 @@
-import VoiceRecorder from './VoiceRecorder'
 import MediaCapture from './MediaCapture'
 
 interface MobileEvalNavProps {
   onBackToRoster: () => void
-  onVoiceNote: (audioUrl: string) => void
   onCaptureMedia: (file: File) => void
+  onSave: () => void
 }
 
-export default function MobileEvalNav({ onBackToRoster, onVoiceNote, onCaptureMedia }: MobileEvalNavProps) {
+export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onSave }: MobileEvalNavProps) {
   return (
     <>
       {/* Bottom Navigation Bar */}
@@ -24,11 +23,21 @@ export default function MobileEvalNav({ onBackToRoster, onVoiceNote, onCaptureMe
             <span className="text-xs mt-1">Roster</span>
           </button>
 
-          {/* Voice Note */}
-          <VoiceRecorder onRecordingComplete={onVoiceNote} />
-
           {/* Capture Media */}
           <MediaCapture onCapture={onCaptureMedia} />
+
+          {/* Save Evaluation */}
+          <button
+            onClick={onSave}
+            className="flex flex-col items-center p-2 text-blue-600 hover:text-blue-700 active:text-blue-800"
+          >
+            <div className="rounded-full p-2 bg-blue-100">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs mt-1 font-medium">Save</span>
+          </button>
         </div>
       </div>
 

@@ -101,16 +101,12 @@ export default function Roster() {
   ) {
     if (!coach || !selectedAthlete) return
 
-    const insertData: any = {
+    const insertData = {
       athlete_id: selectedAthlete.id,
       coach_id: coach.id,
       skill_scores: scores,
       notes
     }
-    
-    // Only add voice_notes if the column exists
-    // TODO: Add voice_notes column to evaluations table
-    // if (voiceNotes && voiceNotes.length > 0) insertData.voice_notes = voiceNotes
 
     const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
 
@@ -290,7 +286,7 @@ export default function Roster() {
                     onChange={(e) => setFilterCoach(e.target.value)}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
                   >
-                    <option value="">All Coaches</option>
+                    <option value="">Coaches</option>
                     {uniqueCoaches.map(c => (
                       <option key={c} value={c}>{c}</option>
                     ))}

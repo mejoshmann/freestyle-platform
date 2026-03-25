@@ -2,10 +2,8 @@ import { useState, useCallback } from 'react'
 import type { Skill, SkillScore, TemplateCategory } from '../../types'
 import EvalHeader from './EvalHeader'
 import SkillsList from './SkillsList'
-import VoiceNotesList from './VoiceNotesList'
 import DesktopActions from './DesktopActions'
 import MobileEvalNav from './MobileEvalNav'
-import { RecordingIndicator } from './VoiceRecorder'
 
 interface SkillEvaluatorProps {
   athleteName: string
@@ -33,8 +31,6 @@ export default function SkillEvaluator({
     }))
   )
   const [notes, setNotes] = useState('')
-  const [voiceNotes, setVoiceNotes] = useState<string[]>([])
-  const [isRecording] = useState(false)
 
   // Computed values
   const evaluatedCount = scores.filter(s => s.score !== null).length
@@ -49,18 +45,10 @@ export default function SkillEvaluator({
 
   const handleSave = useCallback(() => {
     const evaluatedScores = scores.filter(s => s.score !== null)
-    onSave(evaluatedScores, notes, voiceNotes)
-  }, [scores, notes, voiceNotes, onSave])
+    onSave(evaluatedScores, notes)
+  }, [scores, notes, onSave])
 
-  const handleVoiceNote = useCallback((audioUrl: string, transcription?: string) => {
-    setVoiceNotes(prev => {
-      if (transcription) {
-        // Append transcription to notes automatically
-        setNotes(n => n ? `${n}\n\n[Voice] ${transcription}` : `[Voice] ${transcription}`)
-      }
-      return [...prev, audioUrl]
-    })
-  }, [])
+
 
   const handleCaptureMedia = useCallback((_file: File) => {
     // In production, upload to storage and store URL
@@ -93,12 +81,6 @@ export default function SkillEvaluator({
         onScoreChange={updateScore}
       />
 
-      {/* Voice Notes */}
-      <VoiceNotesList voiceNotes={voiceNotes} />
-
-      {/* Recording Indicator */}
-      {isRecording && <RecordingIndicator />}
-
       {/* Notes */}
       <div className="mb-4 sm:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -119,8 +101,8 @@ export default function SkillEvaluator({
       {/* Mobile Bottom Navigation */}
       <MobileEvalNav
         onBackToRoster={handleBackToRoster}
-        onVoiceNote={handleVoiceNote}
         onCaptureMedia={handleCaptureMedia}
+        onSave={handleSave}
       />
     </div>
   )

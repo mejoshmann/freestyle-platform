@@ -16,29 +16,42 @@ export default function VoiceRecorder({ onRecordingComplete }: VoiceRecorderProp
 
   const startRecording = useCallback(async () => {
     try {
-      // Initialize Web Speech API
+      // Check for browser support
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition()
-        recognitionRef.current.continuous = true
-        recognitionRef.current.interimResults = true
-        recognitionRef.current.lang = 'en-US'
-        
-        transcriptRef.current = ''
-        
-        recognitionRef.current.onresult = (event: any) => {
-          let finalTranscript = ''
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript + ' '
+      const hasSpeechSupport = !!SpeechRecognition
+      
+      if (hasSpeechSupport) {
+        try {
+          recognitionRef.current = new SpeechRecognition()
+          recognitionRef.current.continuous = true
+          recognitionRef.current.interimResults = true
+          recognitionRef.current.lang = 'en-US'
+          
+          transcriptRef.current = ''
+          
+          recognitionRef.current.onresult = (event: any) => {
+            let finalTranscript = ''
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' '
+              }
+            }
+            if (finalTranscript) {
+              transcriptRef.current += finalTranscript
             }
           }
-          if (finalTranscript) {
-            transcriptRef.current += finalTranscript
+          
+          recognitionRef.current.onerror = (event: any) => {
+            console.warn('Speech recognition error:', event.error)
+            // Don't alert - just continue with audio recording only
           }
+          
+          recognitionRef.current.start()
+        } catch (speechErr) {
+          console.warn('Speech recognition failed to start:', speechErr)
+          // Continue without speech recognition
+          recognitionRef.current = null
         }
-        
-        recognitionRef.current.start()
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -58,11 +71,16 @@ export default function VoiceRecorder({ onRecordingComplete }: VoiceRecorderProp
         
         // Stop speech recognition
         if (recognitionRef.current) {
-          recognitionRef.current.stop()
+          try {
+            recognitionRef.current.stop()
+          } catch (e) {
+            // Ignore stop errors
+          }
         }
         
-        // Return both audio and transcription
-        onRecordingComplete(audioUrl, transcriptRef.current.trim() || undefined)
+        // Return both audio and transcription (if available)
+        const transcription = transcriptRef.current.trim() || undefined
+        onRecordingComplete(audioUrl, transcription)
         stream.getTracks().forEach(track => track.stop())
         setIsTranscribing(false)
       }
@@ -77,7 +95,7 @@ export default function VoiceRecorder({ onRecordingComplete }: VoiceRecorderProp
       }, 1000)
     } catch (err) {
       console.error('Failed to start recording:', err)
-      alert('Could not access microphone. Please check permissions.')
+      alert('Could not access microphone. Please check permissions and ensure you are using a supported browser (Chrome or Safari on iOS).')
     }
   }, [onRecordingComplete])
 
