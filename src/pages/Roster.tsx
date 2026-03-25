@@ -29,8 +29,6 @@ export default function Roster() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | 'all' | null>(null)
   
   // Filters
-  const [filterMountain, setFilterMountain] = useState<string>('')
-  const [filterDay, setFilterDay] = useState<string>('')
   const [filterCoach, setFilterCoach] = useState<string>('')
   
   // View mode: 'my roster' or 'all athletes'
@@ -205,14 +203,10 @@ export default function Roster() {
     ? athletes.filter(a => myRosterIds.has(a.id))
     : athletes
   
-  const uniqueMountains = Array.from(new Set(athletesToFilter.map(a => a.mountain).filter(Boolean))).sort()
-  const uniqueDays = Array.from(new Set(athletesToFilter.map(a => a.day).filter(Boolean))).sort()
   const uniqueCoaches = Array.from(new Set(athletesToFilter.map(a => a.coach_name).filter(Boolean))).sort()
 
   // Filter athletes
   const filteredAthletes = athletesToFilter.filter(athlete => {
-    if (filterMountain && athlete.mountain !== filterMountain) return false
-    if (filterDay && athlete.day !== filterDay) return false
     if (filterCoach && athlete.coach_name !== filterCoach) return false
     return true
   })
@@ -285,36 +279,10 @@ export default function Roster() {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Filters - Coach only sees Coach filter */}
           {athletes.length > 0 && (
             <div className="bg-white rounded-lg shadow p-4 mb-6">
               <div className="flex flex-wrap gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mountain</label>
-                  <select
-                    value={filterMountain}
-                    onChange={(e) => setFilterMountain(e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-                  >
-                    <option value="">All Mountains</option>
-                    {uniqueMountains.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
-                  <select
-                    value={filterDay}
-                    onChange={(e) => setFilterDay(e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-                  >
-                    <option value="">All Days</option>
-                    {uniqueDays.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Coach</label>
                   <select
@@ -328,17 +296,15 @@ export default function Roster() {
                     ))}
                   </select>
                 </div>
-                {(filterMountain || filterDay || filterCoach) && (
+                {filterCoach && (
                   <div className="flex items-end">
                     <button
                       onClick={() => {
-                        setFilterMountain('')
-                        setFilterDay('')
                         setFilterCoach('')
                       }}
                       className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
                     >
-                      Clear Filters
+                      Clear Filter
                     </button>
                   </div>
                 )}

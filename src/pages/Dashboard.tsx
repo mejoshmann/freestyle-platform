@@ -134,7 +134,7 @@ export default function Dashboard() {
           <DashboardCard
             title="View Evaluations"
             description="Review past athlete evaluations"
-            onClick={() => navigate('/evaluations')}
+            onClick={() => navigate('/roster')}
           />
         </div>
       </div>
