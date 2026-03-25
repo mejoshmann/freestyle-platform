@@ -158,11 +158,9 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   const numCols = 4
   const colWidth = (pageWidth - margin * 2) / numCols
   
-  // Calculate how much space we have and how many skills per column
-  const availableHeight = skillsEndY - skillsStartY
+  // Layout constants
   const headerHeight = 8
   const skillHeight = 5
-  const skillsPerCol = Math.floor((availableHeight - headerHeight) / skillHeight)
   
   // For each category, display heading and skills in columns
   // Use skillsStartY as starting point, not redeclaring currentY
