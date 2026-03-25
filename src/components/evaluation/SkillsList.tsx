@@ -14,10 +14,21 @@ export default function SkillsList({ skills, categories, scores, onScoreChange }
   const derivedCategories = useMemo(() => {
     if (categories && categories.length > 0) return categories
     
+    // Map prefixes to display names
+    const prefixToName: Record<string, string> = {
+      'moguls': 'Moguls',
+      'bigair': 'Jumping',
+      'jump': 'Air Tricks',
+      'freeski': 'Freeskiing',
+      'park': 'Terrain Park',
+      'training': 'Suggested Training',
+      'program': 'Programs for Next Season'
+    }
+    
     // Group skills by their prefix (e.g., 'moguls-turns' -> 'Moguls')
     const grouped = skills.reduce((acc, skill) => {
       const prefix = skill.id.split('-')[0]
-      const categoryName = prefix.charAt(0).toUpperCase() + prefix.slice(1)
+      const categoryName = prefixToName[prefix] || (prefix.charAt(0).toUpperCase() + prefix.slice(1))
       if (!acc[prefix]) {
         acc[prefix] = { id: prefix, name: categoryName, skills: [] }
       }

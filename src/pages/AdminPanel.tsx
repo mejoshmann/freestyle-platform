@@ -163,7 +163,7 @@ export default function AdminPanel() {
     }
 
     // Generate PDF as base64
-    const pdfBase64 = generateReportCardPDF({
+    const pdfDataUrl = await generateReportCardPDF({
       athlete,
       coachName: coach.full_name,
       skillScores: reportCard.evaluation?.skill_scores || [],
@@ -171,6 +171,8 @@ export default function AdminPanel() {
       season: '2025/26',
       date: new Date().toLocaleDateString()
     })
+    // Extract base64 content for email (remove data URL prefix)
+    const pdfBase64 = pdfDataUrl.split(',')[1]
 
     // Send email
     const emailResult = await sendReportCardEmail({
@@ -229,15 +231,31 @@ export default function AdminPanel() {
       const coach = coaches.find(c => c.id === reportCard.coach_id)
       
       if (athlete && coach) {
-        const pdfBase64 = generateReportCardPDF({
-          athlete,
-          coachName: coach.full_name,
-          skillScores: evaluation.skill_scores || [],
-          notes: evaluation.notes || '',
-          season: '2025/26',
-          date: new Date().toLocaleDateString()
-        })
-        setPdfPreviewUrl('data:application/pdf;base64,' + pdfBase64)
+        try {
+          const pdfBase64 = await generateReportCardPDF({
+            athlete,
+            coachName: coach.full_name,
+            skillScores: evaluation.skill_scores || [],
+            notes: evaluation.notes || '',
+            season: '2025/26',
+            date: new Date().toLocaleDateString()
+          })
+          // Convert data URL to blob URL for better iframe compatibility
+          const byteString = atob(pdfBase64.split(',')[1])
+          const mimeString = pdfBase64.split(',')[0].split(':')[1].split(';')[0]
+          const ab = new ArrayBuffer(byteString.length)
+          const ia = new Uint8Array(ab)
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i)
+          }
+          const blob = new Blob([ab], { type: mimeString })
+          const blobUrl = URL.createObjectURL(blob)
+          console.log('Blob URL created:', blobUrl)
+          setPdfPreviewUrl(blobUrl)
+        } catch (e) {
+          console.error('PDF generation error:', e)
+          alert('Failed to generate PDF preview')
+        }
       }
     } else {
       alert('Evaluation not found')
@@ -830,6 +848,16 @@ export default function AdminPanel() {
               {/* PDF Preview */}
               {pdfPreviewUrl && (
                 <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-semibold">PDF Preview</h3>
+                    <a 
+                      href={pdfPreviewUrl} 
+                      download="report.pdf"
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Download PDF
+                    </a>
+                  </div>
                   <iframe
                     src={pdfPreviewUrl}
                     className="w-full h-[600px] border border-gray-300 rounded"

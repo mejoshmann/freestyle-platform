@@ -16,296 +16,321 @@ interface ReportCardData {
   date: string
 }
 
-export function generateReportCardPDF(data: ReportCardData): string {
+async function loadLogoAsBase64(): Promise<string | null> {
+  try {
+    const response = await fetch('/logo.png')
+    if (!response.ok) {
+      console.log('Logo fetch failed:', response.status)
+      return null
+    }
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.readAsDataURL(blob)
+    })
+  } catch (e) {
+    console.log('Failed to load logo:', e)
+    return null
+  }
+}
+
+export async function generateReportCardPDF(data: ReportCardData): Promise<string> {
   const doc = new jsPDF()
   const { athlete, coachName, skillScores, notes, season, date } = data
   
-  // Page width for centering
+  // Page dimensions
   const pageWidth = 210
+  const pageHeight = 297
   const margin = 15
+  const quarterPage = pageHeight / 4
+  const lineHeight = 5
   
-  // Header - Freestyle Vancouver
-  doc.setFontSize(20)
-  doc.setFont('helvetica', 'bold')
-  doc.text('FREESTYLE VANCOUVER', pageWidth / 2, 20, { align: 'center' })
+  // ========== TOP QUARTER (Header Section) ==========
   
-  // Subheader - Athlete Progress Report
-  doc.setFontSize(14)
-  doc.text('ATHLETE PROGRESS REPORT', pageWidth / 2, 30, { align: 'center' })
-  
-  // Athlete Info at top
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'bold')
-  doc.text('ATHLETE:', margin, 42)
-  doc.setFont('helvetica', 'normal')
-  doc.text(athlete.full_name, margin + 25, 42)
-  
-  doc.setFont('helvetica', 'bold')
-  doc.text('SEASON/YEAR:', 90, 42)
-  doc.setFont('helvetica', 'normal')
-  doc.text(season, 125, 42)
-  
-  doc.setFont('helvetica', 'bold')
-  doc.text('MOUNTAIN:', 160, 42)
-  doc.setFont('helvetica', 'normal')
-  doc.text(athlete.mountain || 'N/A', 185, 42)
-  
-  doc.setFont('helvetica', 'bold')
-  doc.text('COACH:', margin, 50)
-  doc.setFont('helvetica', 'normal')
-  doc.text(coachName, margin + 20, 50)
-  
-  // Legend text
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'bold')
-  doc.text("SKILL PROGRESSIONS: ", margin, 58)
-  doc.setFont('helvetica', 'normal')
-  doc.text('1-Area of Focus | 2-Partial | 3-Consistent | 4-Mastered', margin + 35, 58)
-  
-  // Starting Y position for skill evaluations
-  let y = 65
-  const lineHeight = 6
-  
-  // Group skill scores by category (extract category from skill_name if it contains colon)
-  const groupedSkills: Record<string, SkillScore[]> = {}
-  skillScores.forEach((score) => {
-    const parts = score.skill_name.split(':')
-    const category = parts.length > 1 ? parts[0].trim() : 'SKILLS'
-    const skillName = parts.length > 1 ? parts[1].trim() : score.skill_name
-    
-    if (!groupedSkills[category]) {
-      groupedSkills[category] = []
+  // Add mountains in background (top quarter)
+  try {
+    const mountainsBase64 = await loadMountainsAsBase64()
+    if (mountainsBase64) {
+      doc.addImage(mountainsBase64, 'PNG', 0, quarterPage - 20, pageWidth, 40)
     }
-    groupedSkills[category].push({ ...score, skill_name: skillName })
-  })
-  
-  // Categories that should show Yes/No instead of 1-4 scores
-  const yesNoCategories = ['Suggested Training', 'Programs for Next Season']
-  
-  // Draw each category with its skills - multiple per line
-  Object.entries(groupedSkills).forEach(([category, skills]) => {
-    // Check if this is a Yes/No category
-    const isYesNoCategory = yesNoCategories.some(yn => category.toLowerCase().includes(yn.toLowerCase()))
-    
-    // Category name - bold, uppercase
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text(category.toUpperCase(), margin, y)
-    y += lineHeight + 2
-    
-    if (isYesNoCategory) {
-      // Draw Yes/No skills - 3 per line
-      let skillsInLine = 0
-      let currentX = margin + 5
-      
-      skills.forEach((skill) => {
-        // Check if we need to start a new line (3 skills per line)
-        if (skillsInLine === 3) {
-          y += lineHeight + 2
-          skillsInLine = 0
-          currentX = margin + 5
-        }
-        
-        // Skill name
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(8)
-        doc.text(skill.skill_name, currentX, y)
-        
-        // Yes/No (score >= 3 means Yes, otherwise No)
-        const scoreX = currentX + doc.getTextWidth(skill.skill_name) + 3
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(9)
-        if (skill.score && skill.score >= 3) {
-          doc.text('Y', scoreX, y)
-        } else {
-          doc.text('N', scoreX, y)
-        }
-        
-        skillsInLine++
-        currentX = margin + 5 + (skillsInLine * 65)
-      })
-      
-      // Move to next line after last skill
-      if (skillsInLine > 0) {
-        y += lineHeight + 4
-      }
-    } else {
-      // Draw regular skills - 3 per line with just the score number
-      let skillsInLine = 0
-      let currentX = margin + 5
-      
-      skills.forEach((skill) => {
-        // Check if we need to start a new line (3 skills per line)
-        if (skillsInLine === 3) {
-          y += lineHeight + 2
-          skillsInLine = 0
-          currentX = margin + 5
-        }
-        
-        // Skill name
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(8)
-        doc.text(skill.skill_name, currentX, y)
-        
-        // Score number (just the selected score, or '-' if none)
-        const scoreX = currentX + doc.getTextWidth(skill.skill_name) + 3
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(9)
-        if (skill.score && skill.score > 0) {
-          doc.text(skill.score.toString(), scoreX, y)
-        } else {
-          doc.text('-', scoreX, y)
-        }
-        
-        skillsInLine++
-        // Move X for next skill (approx 60mm per skill column)
-        currentX = margin + 5 + (skillsInLine * 65)
-      })
-      
-      // Move to next line after last skill
-      if (skillsInLine > 0) {
-        y += lineHeight + 4
-      }
-    }
-  })
-  
-  // If no skills evaluated, show message
-  if (skillScores.length === 0) {
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'italic')
-    doc.text('No skills evaluated yet.', margin, y)
-    y += lineHeight
+  } catch (e) {
+    console.log('Mountains image not loaded')
   }
   
-  y += 4
-  
-  // Competed in competition checkbox
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.text('COMPETED IN A COMPETITION:', margin, y)
-  doc.rect(margin + 75, y - 4, 5, 5)
-  doc.text('☐', margin + 75.5, y - 0.5)
-  y += lineHeight + 6
-  
-  // WHAT IS NEXT section
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.text('WHAT IS NEXT?', margin, y)
-  y += lineHeight
-  doc.text('GOALS FOR', margin, y)
-  y += lineHeight
-  doc.text('NEXT SEASON/', margin, y)
-  y += lineHeight
-  doc.text('COMMENTS', margin, y)
-  
-  // Comments box
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  const commentsX = margin + 35
-  const commentsWidth = pageWidth - margin - commentsX - margin
-  const comments = notes || ''
-  const splitComments = doc.splitTextToSize(comments, commentsWidth)
-  doc.text(splitComments, commentsX, y - 12)
-  
-  // Draw box around comments
-  doc.rect(commentsX, y - 20, commentsWidth, 25)
-  y += 20
-  
-  // SUGGESTED TRAINING section
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.text('SUGGESTED TRAINING', margin, y)
-  y += lineHeight + 2
-  
-  // Spring and Summer Training
-  doc.text('SPRING AND SUMMER TRAINING:', margin, y)
-  y += lineHeight
-  
-  const trainingItems = ['Trampoline', 'Dryland', 'Water Ramps']
-  let trainingX = margin + 10
-  trainingItems.forEach((item) => {
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    doc.text(item, trainingX, y)
-    doc.rect(trainingX + 22, y - 3, 4, 4)
-    doc.text('☐', trainingX + 22.5, y - 0.5)
-    trainingX += 45
-  })
-  y += lineHeight + 2
-  
-  // Fall Training
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('FALL TRAINING:', margin, y)
-  y += lineHeight
-  
-  trainingX = margin + 10
-  trainingItems.forEach((item) => {
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    doc.text(item, trainingX, y)
-    doc.rect(trainingX + 22, y - 3, 4, 4)
-    doc.text('☐', trainingX + 22.5, y - 0.5)
-    trainingX += 45
-  })
-  y += lineHeight + 4
-  
-  // PROGRAMS FOR NEXT SEASON
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('PROGRAMS FOR NEXT SEASON:', margin, y)
-  y += lineHeight
-  
-  const programs = [
-    { name: 'FUNdamentalz', x: margin + 5 },
-    { name: 'Freestylerz', x: margin + 45 },
-    { name: 'Night Riders', x: margin + 80 },
-    { name: 'Girlstylerz', x: margin + 120 },
-    { name: 'DEV Team', x: margin + 5 },
-  ]
-  
-  programs.forEach((prog, index) => {
-    if (index === 4) {
-      y += lineHeight + 2
+  // Add skier in center background
+  try {
+    const skierBase64 = await loadSkierAsBase64()
+    if (skierBase64) {
+      const centerX = (pageWidth - 40) / 2
+      const centerY = 5
+      doc.addImage(skierBase64, 'PNG', centerX, centerY, 40, 40)
     }
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    const displayName = prog.name === 'DEV Team' ? 'DEV Team (Invite Required)' : prog.name
-    doc.text(displayName, prog.x, y)
-    const boxX = index === 4 ? prog.x + 55 : prog.x + 30
-    doc.rect(boxX, y - 3, 4, 4)
-    doc.text('☐', boxX + 0.5, y - 0.5)
-  })
-  y += lineHeight + 6
+  } catch (e) {
+    console.log('Skier image not loaded')
+  }
   
-  // Footer - Coach and Date
+  // Add logo on top left
+  const logoBase64 = await loadLogoAsBase64()
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', margin, 5, 25, 18)
+    } catch (e) {
+      console.log('Logo failed to render:', e)
+    }
+  }
+  
+  // Right side - Congratulations message
+  const rightX = pageWidth / 2 + 10
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Congratulations!', rightX, 20)
+  
+  // Freestyle Vancouver Athlete Progress Report
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Freestyle Vancouver', rightX, 45)
+  doc.text('Athlete Progress Report', rightX, 52)
+  
+  // Coach and Date (compact)
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'bold')
+  doc.text(`Coach: ${coachName}`, margin, 30)
+  doc.text(`Date: ${date}`, margin, 37)
+  
+  // ========== MIDDLE HALF - SKILLS SECTION ==========
+  
+  const leftX = margin
+  
+  let currentY = quarterPage + 5
+  
+  // Athlete Name and Mountain
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
-  doc.text('COACH NAME:', margin, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(coachName, margin + 30, y)
+  doc.text(`${athlete.full_name} - ${athlete.mountain || 'N/A'}`, leftX, currentY)
+  currentY += lineHeight + 2
   
+  // Athlete's Skill/Progressions header
+  doc.setFontSize(9)
   doc.setFont('helvetica', 'bold')
-  doc.text('DATE:', 110, y)
+  doc.text("Athlete's Skill/Progressions:", leftX, currentY)
+  currentY += lineHeight + 1
+  
+  // Legend
+  doc.setFontSize(6)
+  doc.setFont('helvetica', 'italic')
+  doc.text('1-Focus | 2-Partial | 3-Consistent | 4-Mastered', leftX, currentY)
+  currentY += lineHeight + 3
+  
+  // Group skill scores by category
+  const groupedSkills: Record<string, SkillScore[]> = {}
+  skillScores.forEach((score) => {
+    let category = 'SKILLS'
+    if (score.skill_id.startsWith('training-')) {
+      category = 'Suggested Training'
+    } else if (score.skill_id.startsWith('program-')) {
+      category = 'Programs for Next Season'
+    } else if (score.skill_id.startsWith('moguls-')) {
+      category = 'Moguls'
+    } else if (score.skill_id.startsWith('bigair-')) {
+      category = 'Jumping'
+    } else if (score.skill_id.startsWith('freeski-')) {
+      category = 'Freeskiing'
+    } else if (score.skill_id.startsWith('jump-')) {
+      category = 'Air Tricks'
+    } else if (score.skill_id.startsWith('park-')) {
+      category = 'Terrain Park'
+    }
+    
+    // Only include actual skills (not training/programs)
+    if (!['Suggested Training', 'Programs for Next Season'].includes(category)) {
+      if (!groupedSkills[category]) {
+        groupedSkills[category] = []
+      }
+      groupedSkills[category].push(score)
+    }
+  })
+  
+  // Define the 5 categories and lay them out with headings
+  const categories = ['Moguls', 'Air Tricks', 'Jumping', 'Freeskiing', 'Terrain Park']
+  const skillsStartY = currentY
+  const skillsEndY = quarterPage * 3 - 5
+  const numCols = 4
+  const colWidth = (pageWidth - margin * 2) / numCols
+  
+  // Calculate how much space we have and how many skills per column
+  const availableHeight = skillsEndY - skillsStartY
+  const headerHeight = 8
+  const skillHeight = 5
+  const skillsPerCol = Math.floor((availableHeight - headerHeight) / skillHeight)
+  
+  // For each category, display heading and skills in columns
+  // Use skillsStartY as starting point, not redeclaring currentY
+  currentY = skillsStartY
+  
+  categories.forEach((category) => {
+    const skills = groupedSkills[category] || []
+    if (skills.length === 0) return
+    
+    // Check if we need to move to next set of columns (new row of categories)
+    if (currentY + headerHeight + (skills.length * skillHeight / numCols) > skillsEndY) {
+      currentY = skillsStartY // Reset to top for next set
+    }
+    
+    // Category heading spans full width
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(category, leftX, currentY)
+    currentY += headerHeight
+    
+    // Skills in 4 columns
+    const skillsPerRow = numCols
+    const totalRows = Math.ceil(skills.length / skillsPerRow)
+    
+    for (let row = 0; row < totalRows; row++) {
+      const rowY = currentY + (row * skillHeight)
+      if (rowY > skillsEndY) break
+      
+      for (let col = 0; col < numCols; col++) {
+        const skillIdx = (row * numCols) + col
+        if (skillIdx >= skills.length) break
+        
+        const colX = leftX + (col * colWidth)
+        const skill = skills[skillIdx]
+        
+        doc.setFontSize(7)
+        doc.setFont('helvetica', 'normal')
+        const scoreText = skill.score ? skill.score.toString() : '-'
+        const skillText = `${skill.skill_name}: ${scoreText}`
+        const displayText = skillText.length > 20 ? skillText.substring(0, 20) + '...' : skillText
+        doc.text(displayText, colX, rowY)
+      }
+    }
+    
+    // Advance Y for next category
+    currentY += (totalRows * skillHeight) + 5
+  })
+  
+  // ========== BOTTOM QUARTER - WHAT'S NEXT ==========
+  
+  let bottomY = quarterPage * 3 + 8
+  
+  // What's Next? header
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.text("What's Next?", leftX, bottomY)
+  bottomY += lineHeight + 2
+  
+  // LEFT SIDE - Goals for next season
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Goals:', leftX, bottomY)
+  bottomY += lineHeight + 1
+  
+  // Comments/goals box
   doc.setFont('helvetica', 'normal')
-  doc.text(date, 125, y)
-  y += lineHeight + 4
+  doc.setFontSize(7)
+  const comments = notes || ''
+  const splitComments = doc.splitTextToSize(comments, 85)
+  doc.text(splitComments, leftX, bottomY)
   
-  // Contact info at bottom
-  doc.setFontSize(8)
-  doc.text('For more information: info@vancouverfreestyle.com', margin, y)
-  y += lineHeight
-  doc.text('Congratulations!', margin, y)
-  y += lineHeight
-  doc.text('See you next season!', margin, y)
+  // Draw box around comments
+  const boxHeight = Math.max(20, splitComments.length * 3.5)
+  doc.rect(leftX, bottomY - 3, 85, boxHeight)
   
-  // Return PDF as base64
-  return doc.output('datauristring').split(',')[1]
+  // RIGHT SIDE - Season, Training and Programs
+  const rightColX = (pageWidth / 2) + 5
+  let rightY = quarterPage * 3 + 8
+  
+  // Season/Year
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'bold')
+  doc.text(`Season: ${season}`, rightColX, rightY)
+  rightY += lineHeight + 4
+  
+  // Get selected training items
+  const selectedTraining = skillScores.filter(s => 
+    s.skill_id.startsWith('training-') && s.score && s.score >= 3
+  )
+  
+  // Only show Suggested Training if there are selected items
+  if (selectedTraining.length > 0) {
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Training:', rightColX, rightY)
+    rightY += lineHeight + 1
+    
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    selectedTraining.forEach((skill) => {
+      doc.text(`• ${skill.skill_name}`, rightColX + 5, rightY)
+      rightY += lineHeight
+    })
+    rightY += lineHeight
+  }
+  
+  // Get selected programs
+  const selectedPrograms = skillScores.filter(s => 
+    s.skill_id.startsWith('program-') && s.score && s.score >= 3
+  )
+  
+  // Only show Programs if there are selected items
+  if (selectedPrograms.length > 0) {
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Programs:', rightColX, rightY)
+    rightY += lineHeight + 1
+    
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    selectedPrograms.forEach((skill) => {
+      doc.text(`• ${skill.skill_name}`, rightColX + 5, rightY)
+      rightY += lineHeight
+    })
+  }
+  
+  // "See you next season!" at bottom of page
+  doc.setFontSize(14)
+  doc.setFont('helvetica', 'bold')
+  doc.text('See you next season!', pageWidth / 2, pageHeight - 15, { align: 'center' })
+  
+  // Return PDF as complete data URL
+  return doc.output('datauristring')
 }
 
-export function downloadReportCardPDF(data: ReportCardData): void {
+async function loadSkierAsBase64(): Promise<string | null> {
+  try {
+    const response = await fetch('/skier.png')
+    if (!response.ok) return null
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.readAsDataURL(blob)
+    })
+  } catch (e) {
+    return null
+  }
+}
+
+async function loadMountainsAsBase64(): Promise<string | null> {
+  try {
+    const response = await fetch('/mountains.png')
+    if (!response.ok) return null
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.readAsDataURL(blob)
+    })
+  } catch (e) {
+    return null
+  }
+}
+
+export async function downloadReportCardPDF(data: ReportCardData): Promise<void> {
   // Generate the PDF and trigger download
-  const base64 = generateReportCardPDF(data)
+  const base64 = await generateReportCardPDF(data)
   const link = document.createElement('a')
   link.href = 'data:application/pdf;base64,' + base64
   link.download = `${data.athlete.full_name.replace(/\s+/g, '_')}_Progress_Report.pdf`

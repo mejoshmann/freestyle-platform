@@ -17,8 +17,8 @@ export const defaultTemplates: TemplateDefinition[] = [
     ],
   },
   {
-    name: 'Big Air',
-    description: 'Big Air skiing evaluation',
+    name: 'Jumping',
+    description: 'Jumping skiing evaluation',
     skills: [
       { id: 'bigair-takeoff', name: 'Take Off', description: 'Quality of jump takeoff' },
       { id: 'bigair-extension', name: 'Extension', description: 'Body extension in the air' },
@@ -39,10 +39,12 @@ export const defaultTemplates: TemplateDefinition[] = [
     ],
   },
   {
-    name: 'Jumping',
-    description: 'Jumping evaluation',
+    name: 'Air Tricks',
+    description: 'Air Tricks evaluation',
     skills: [
-      { id: 'jump-spinning', name: 'Spinning', description: 'Spin control and rotation' },
+      { id: 'jump-difficulty', name: 'Difficulty of Trick / Execution', description: 'Complexity and execution quality of tricks' },
+      { id: 'jump-grabs', name: 'Grabs', description: 'Grab technique and style' },
+      { id: 'jump-spins', name: 'Spins', description: 'Spin control and rotation' },
     ],
   },
   {
@@ -51,8 +53,8 @@ export const defaultTemplates: TemplateDefinition[] = [
     skills: [
       { id: 'park-safety', name: 'Safety', description: 'Safety awareness and etiquette' },
       { id: 'park-boxes', name: 'Boxes', description: 'Box slide skills' },
-      { id: 'park-rails', name: 'Rails', description: 'Rail slide skills' },
-      { id: 'park-wall', name: 'Wall Features', description: 'Wall ride and quarter pipe skills' },
+      { id: 'park-rails', name: 'Tubes', description: 'Tube slide skills' },
+      { id: 'park-wall', name: 'Hip / Quarter Pipe / Wall Ride', description: 'Hip, quarter pipe and wall ride skills' },
     ],
   },
   {
@@ -70,9 +72,9 @@ export const defaultTemplates: TemplateDefinition[] = [
     description: 'Recommended programs for next season',
     skills: [
       { id: 'program-fundamentalz', name: 'FUNdamentalz', description: 'Entry-level freestyle program' },
-      { id: 'program-freestylerz', name: 'FreestylerZ', description: 'Intermediate freestyle program' },
+      { id: 'program-freestylerz', name: 'Freestylerz', description: 'Intermediate freestyle program' },
       { id: 'program-night', name: 'Night Riders', description: 'Evening training program' },
-      { id: 'program-girlstylerz', name: 'GirlstylerZ', description: 'Girls freestyle program' },
+      { id: 'program-girlstylerz', name: 'Girlstylerz', description: 'Girls freestyle program' },
       { id: 'program-dev', name: 'DEV Team (Invite Required)', description: 'Development team - invitation only' },
     ],
   },

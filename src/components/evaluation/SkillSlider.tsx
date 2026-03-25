@@ -46,7 +46,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
   }
 
   if (isYesNoSkill) {
-    // Yes/No toggle button style for Programs
+    // Simple Yes toggle for Programs - click to select, click again to deselect
     const isYes = value && value >= 3
     return (
       <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
@@ -55,16 +55,14 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             {skill.name}
           </label>
           <button
-            onClick={handleToggle}
+            onClick={() => onChange(isYes ? null : 4)}
             className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
               isYes
                 ? 'bg-green-500 text-white hover:bg-green-600'
-                : isSkipped
-                ? 'bg-gray-200 text-gray-500 hover:bg-gray-300'
-                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
             }`}
           >
-            {isYes ? 'YES' : isSkipped ? 'N/A' : 'NO'}
+            {isYes ? 'YES' : 'SELECT'}
           </button>
         </div>
         {skill.description && (
