@@ -226,9 +226,19 @@ export default function Roster() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-2 sm:p-4 lg:p-8 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="px-4 py-6 sm:px-0">
+        <div className="py-4 sm:py-6">
+          {/* Coach Instructions Panel */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">How to Use This App</h3>
+            <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+              <li>Add the athletes you have coached to your roster from the &quot;All Athletes&quot; tab</li>
+              <li>Evaluate them on their performance using the built-in metrics</li>
+              <li>Save evaluations to be sent out as report cards for parents to see</li>
+            </ul>
+          </div>
+
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
@@ -263,7 +273,8 @@ export default function Roster() {
               <span className="text-sm text-gray-500">
                 {filteredAthletes.length} athletes
               </span>
-              {viewMode === 'my roster' && myRosterIds.size > 0 && (
+              {/* Only show Clear All for admins */}
+              {coach?.is_admin && viewMode === 'my roster' && myRosterIds.size > 0 && (
                 <button 
                   onClick={() => setShowDeleteConfirm('all')}
                   className="py-2 px-4 border border-red-300 text-red-600 rounded hover:bg-red-50"
