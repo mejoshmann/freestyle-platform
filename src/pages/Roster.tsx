@@ -456,6 +456,7 @@ export default function Roster() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
           <div className="w-full sm:max-w-2xl bg-white rounded-t-lg sm:rounded-lg shadow-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <SkillEvaluator
+              athleteId={selectedAthlete.id}
               athleteName={selectedAthlete.full_name}
               skills={selectedMetricsSet?.skills || allSkills}
               categories={selectedMetricsSet?.categories}

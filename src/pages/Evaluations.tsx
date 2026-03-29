@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import MediaGallery from '../components/media/MediaGallery'
 import type { Athlete } from '../types'
 
 interface Evaluation {
@@ -90,6 +91,12 @@ export default function Evaluations() {
               Back to Roster
             </button>
           </div>
+        </div>
+
+        {/* Media Gallery */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Media Gallery</h3>
+          <MediaGallery athleteId={athleteId!} isCoach={true} />
         </div>
 
         {/* Evaluations List */}

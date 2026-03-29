@@ -223,6 +223,37 @@ create policy "Admins can update all evaluations"
     )
   );
 
+-- Athlete photos table (similar to athlete_videos)
+create table if not exists athlete_photos (
+  id uuid default gen_random_uuid() primary key,
+  athlete_id uuid references athletes(id) on delete cascade not null,
+  coach_id uuid references coaches(id) on delete cascade,
+  storage_path text not null,
+  public_url text not null,
+  description text,
+  tags text[] default '{}',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on athlete_photos
+alter table athlete_photos enable row level security;
+
+-- Coaches can manage their own photos
+create policy "Coaches can manage their photos"
+  on athlete_photos for all
+  using (auth.uid() = coach_id);
+
+-- Admins can read all photos
+create policy "Admins can read all photos"
+  on athlete_photos for select
+  to authenticated
+  using (
+    exists (
+      select 1 from coaches c 
+      where c.id = auth.uid() and c.is_admin = true
+    )
+  );
+
 -- Trigger to automatically create coach profile on user signup
 create or replace function public.handle_new_user()
 returns trigger as $$

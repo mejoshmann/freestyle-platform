@@ -8,6 +8,13 @@ export interface TemplateDefinition {
 
 export const defaultTemplates: TemplateDefinition[] = [
   {
+    name: 'Effort & Participation',
+    description: 'Overall effort and participation evaluation',
+    skills: [
+      { id: 'effort-participation', name: 'Effort & Participation', description: 'Overall effort and participation in training' },
+    ],
+  },
+  {
     name: 'Moguls',
     description: 'Mogul skiing evaluation',
     skills: [

@@ -134,7 +134,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             type="range"
             min={1}
             max={4}
-            step={0.5}
+            step={1}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
             className="w-full h-3 sm:h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 touch-manipulation"
@@ -142,11 +142,8 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
           />
           <div className="flex justify-between text-xs text-gray-400 mt-2 sm:mt-1 px-1">
             <span>1</span>
-            <span>1.5</span>
             <span>2</span>
-            <span>2.5</span>
             <span>3</span>
-            <span>3.5</span>
             <span>4</span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">

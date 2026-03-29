@@ -83,3 +83,14 @@ export interface AthleteVideo {
   tags: string[]
   created_at: string
 }
+
+export interface AthletePhoto {
+  id: string
+  athlete_id: string
+  coach_id?: string
+  storage_path: string
+  public_url: string
+  description?: string
+  tags: string[]
+  created_at: string
+}

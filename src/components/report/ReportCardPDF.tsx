@@ -43,38 +43,26 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   const pageWidth = 210
   const pageHeight = 297
   const margin = 15
-  const quarterPage = pageHeight / 4
+  const thirdPage = pageHeight / 3
   const lineHeight = 5
   
-  // ========== TOP QUARTER (Header Section) ==========
+  // ========== TOP THIRD (Header Section) ==========
   
-  // Add mountains in background (top quarter)
+  // Add pointy mountains in background (top third)
   try {
-    const mountainsBase64 = await loadMountainsAsBase64()
-    if (mountainsBase64) {
-      doc.addImage(mountainsBase64, 'PNG', 0, quarterPage - 20, pageWidth, 40)
+    const pointyBase64 = await loadPointyAsBase64()
+    if (pointyBase64) {
+      doc.addImage(pointyBase64, 'PNG', 0, thirdPage - 30, pageWidth, 50)
     }
   } catch (e) {
-    console.log('Mountains image not loaded')
-  }
-  
-  // Add skier in center background
-  try {
-    const skierBase64 = await loadSkierAsBase64()
-    if (skierBase64) {
-      const centerX = (pageWidth - 40) / 2
-      const centerY = 5
-      doc.addImage(skierBase64, 'PNG', centerX, centerY, 40, 40)
-    }
-  } catch (e) {
-    console.log('Skier image not loaded')
+    console.log('Pointy mountains image not loaded')
   }
   
   // Add logo on top left
   const logoBase64 = await loadLogoAsBase64()
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, 'PNG', margin, 5, 25, 18)
+      doc.addImage(logoBase64, 'PNG', margin, 8, 45, 45)
     } catch (e) {
       console.log('Logo failed to render:', e)
     }
@@ -82,38 +70,57 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   
   // Right side - Congratulations message
   const rightX = pageWidth / 2 + 10
-  doc.setFontSize(18)
+  doc.setFontSize(24)
   doc.setFont('helvetica', 'bold')
-  doc.text('Congratulations!', rightX, 20)
+  doc.text('CONGRATULATIONS!', rightX, 25)
   
   // Freestyle Vancouver Athlete Progress Report
+  doc.setFontSize(16)
+  doc.setFont('helvetica', 'bold')
+  // Set red color for FREESTYLE
+  doc.setTextColor(237, 65, 55)
+  doc.text('FREESTYLE', rightX, 50)
+  // Reset to black for VANCOUVER
+  doc.setTextColor(0, 0, 0)
+  const freestyleWidth = doc.getTextWidth('FREESTYLE')
+  doc.text('VANCOUVER', rightX + freestyleWidth + 3, 50)
+  doc.setFontSize(12)
+  doc.text('Athlete Progress Report', rightX, 58)
+  
+  // Athlete, Coach, Season and Group Name (middle of top third)
+  const topThirdMiddle = thirdPage / 2 + 10
   doc.setFontSize(11)
   doc.setFont('helvetica', 'bold')
-  doc.text('Freestyle Vancouver', rightX, 45)
-  doc.text('Athlete Progress Report', rightX, 52)
+  doc.text(`Athlete: ${athlete.full_name}`, margin, topThirdMiddle)
+  doc.setFontSize(10)
+  doc.text(`Coach: ${coachName}`, margin, topThirdMiddle + 8)
+  doc.text(`Season: ${season}`, margin, topThirdMiddle + 16)
+  doc.text(`Group Name: ${athlete.group_name || 'N/A'}`, margin, topThirdMiddle + 24)
   
-  // Coach and Date (compact)
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`Coach: ${coachName}`, margin, 30)
-  doc.text(`Date: ${date}`, margin, 37)
-  
-  // ========== MIDDLE HALF - SKILLS SECTION ==========
+  // ========== MIDDLE THIRD - SKILLS SECTION ==========
   
   const leftX = margin
   
-  let currentY = quarterPage + 5
+  let currentY = thirdPage + 5
   
-  // Athlete Name and Mountain
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`${athlete.full_name} - ${athlete.mountain || 'N/A'}`, leftX, currentY)
-  currentY += lineHeight + 2
+  // Add skier logo in middle section background - larger and centered
+  try {
+    const skierLogoBase64 = await loadSkierLogoAsBase64()
+    if (skierLogoBase64) {
+      const skierSize = 150
+      const centerX = (pageWidth - skierSize) / 2
+      const centerY = thirdPage + -40
+      doc.addImage(skierLogoBase64, 'PNG', centerX, centerY, skierSize, skierSize)
+    }
+  } catch (e) {
+    console.log('Skier logo image not loaded')
+  }
   
-  // Athlete's Skill/Progressions header
-  doc.setFontSize(9)
+  // Athlete's Skills and Progressions header - under the mountain/skier image
+  currentY += 22
+  doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
-  doc.text("Athlete's Skill/Progressions:", leftX, currentY)
+  doc.text("Athlete's Skills and Progressions", leftX, currentY)
   currentY += lineHeight + 1
   
   // Legend
@@ -130,6 +137,8 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
       category = 'Suggested Training'
     } else if (score.skill_id.startsWith('program-')) {
       category = 'Programs for Next Season'
+    } else if (score.skill_id.startsWith('effort-participation')) {
+      category = 'Effort & Participation'
     } else if (score.skill_id.startsWith('moguls-')) {
       category = 'Moguls'
     } else if (score.skill_id.startsWith('bigair-')) {
@@ -151,67 +160,102 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
     }
   })
   
-  // Define the 5 categories and lay them out with headings
-  const categories = ['Moguls', 'Air Tricks', 'Jumping', 'Freeskiing', 'Terrain Park']
+  // Define the 6 categories - displayed with Effort & Participation as two lines
+  const categories = ['Effort & Participation', 'Moguls', 'Air Tricks', 'Jumping', 'Freeskiing', 'Terrain Park']
   const skillsStartY = currentY
-  const skillsEndY = quarterPage * 3 - 5
-  const numCols = 4
-  const colWidth = (pageWidth - margin * 2) / numCols
   
-  // Layout constants
-  const headerHeight = 8
-  const skillHeight = 5
+  // Layout constants - reduced spacing
+  const categoryRowHeight = 8
+  const categoryGap = 2
   
-  // For each category, display heading and skills in columns
-  // Use skillsStartY as starting point, not redeclaring currentY
-  currentY = skillsStartY
+  // Column positions
+  const categoryColX = leftX
+  const scoresColX = leftX + 55
   
+  let currentRowY = skillsStartY
+  
+  // Draw each category with inline scores
   categories.forEach((category) => {
     const skills = groupedSkills[category] || []
-    if (skills.length === 0) return
     
-    // Check if we need to move to next set of columns (new row of categories)
-    if (currentY + headerHeight + (skills.length * skillHeight / numCols) > skillsEndY) {
-      currentY = skillsStartY // Reset to top for next set
+    // Category name on the left
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    // Special display for Effort & Participation - show as two lines
+    if (category === 'Effort & Participation') {
+      doc.text('Effort &', categoryColX, currentRowY)
+    } else {
+      doc.text(`${category}:`, categoryColX, currentRowY)
     }
     
-    // Category heading spans full width
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text(category, leftX, currentY)
-    currentY += headerHeight
-    
-    // Skills in 4 columns
-    const skillsPerRow = numCols
-    const totalRows = Math.ceil(skills.length / skillsPerRow)
-    
-    for (let row = 0; row < totalRows; row++) {
-      const rowY = currentY + (row * skillHeight)
-      if (rowY > skillsEndY) break
+    // Scores inline on the right - with line wrapping for long categories
+    if (skills.length === 0) {
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'italic')
+      doc.text('No skills evaluated', scoresColX, currentRowY)
+    } else {
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      // Spread skills across the line with tight spacing and wrap if needed
+      let skillX = scoresColX
+      let skillY = currentRowY
+      const maxX = pageWidth - margin - 5
       
-      for (let col = 0; col < numCols; col++) {
-        const skillIdx = (row * numCols) + col
-        if (skillIdx >= skills.length) break
-        
-        const colX = leftX + (col * colWidth)
-        const skill = skills[skillIdx]
-        
-        doc.setFontSize(7)
-        doc.setFont('helvetica', 'normal')
+      skills.forEach((skill, index) => {
         const scoreText = skill.score ? skill.score.toString() : '-'
         const skillText = `${skill.skill_name}: ${scoreText}`
-        const displayText = skillText.length > 20 ? skillText.substring(0, 20) + '...' : skillText
-        doc.text(displayText, colX, rowY)
+        const textWidth = skillText.length * 2.5
+        
+        // Check if this skill would go off the page
+        if (skillX + textWidth > maxX && index > 0) {
+          // Wrap to next line
+          skillY += 5
+          skillX = scoresColX
+        }
+        
+        doc.text(skillText, skillX, skillY)
+        // Move x position for next skill (approximate width + tight spacing)
+        skillX += textWidth + 4
+      })
+      
+      // Update currentRowY if we wrapped to multiple lines
+      if (skillY > currentRowY) {
+        currentRowY = skillY
       }
     }
     
-    // Advance Y for next category
-    currentY += (totalRows * skillHeight) + 5
+    // For Effort & Participation, add Participation: line underneath with same score
+    if (category === 'Effort & Participation') {
+      currentRowY += 5
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Participation:', categoryColX, currentRowY)
+      // Show same skills/scores
+      if (skills.length === 0) {
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'italic')
+        doc.text('No skills evaluated', scoresColX, currentRowY)
+      } else {
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        let skillX = scoresColX
+        skills.forEach((skill) => {
+          const scoreText = skill.score ? skill.score.toString() : '-'
+          const skillText = `${skill.skill_name}: ${scoreText}`
+          doc.text(skillText, skillX, currentRowY)
+          skillX += skillText.length * 2.5 + 4
+        })
+      }
+    }
+    
+    currentRowY += categoryRowHeight + 2
   })
   
-  // ========== BOTTOM QUARTER - WHAT'S NEXT ==========
+  // ========== BOTTOM THIRD - WHAT'S NEXT ==========
   
-  let bottomY = quarterPage * 3 + 8
+  // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
+  // Increased gap from skills section (+35 instead of +25)
+  let bottomY = thirdPage * 2 + 35
   
   // What's Next? header
   doc.setFontSize(12)
@@ -219,73 +263,67 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   doc.text("What's Next?", leftX, bottomY)
   bottomY += lineHeight + 2
   
-  // LEFT SIDE - Goals for next season
-  doc.setFontSize(9)
+  // Training and Programs inline (side by side)
+  // Get selected training items (Yes/No - score of 1 means Yes/Recommended)
+  const selectedTraining = skillScores.filter(s => 
+    s.skill_id.startsWith('training-') && s.score === 1
+  )
+  
+  // Get selected programs (Yes/No - score of 1 means Yes/Selected)
+  const selectedPrograms = skillScores.filter(s => 
+    s.skill_id.startsWith('program-') && s.score === 1
+  )
+  
+  // Only show Training/Programs section if at least one is selected
+  if (selectedTraining.length > 0 || selectedPrograms.length > 0) {
+    // Training on the left
+    if (selectedTraining.length > 0) {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Training:', leftX, bottomY)
+      
+      let trainingX = leftX + 22
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      selectedTraining.forEach((skill) => {
+        const displayName = skill.skill_name.replace(/^Suggested Training:\s*/i, '')
+        doc.text(displayName, trainingX, bottomY)
+        trainingX += displayName.length * 1.8 + 6
+      })
+    }
+    
+    // Programs on the right
+    if (selectedPrograms.length > 0) {
+      const programsColX = selectedTraining.length > 0 ? (pageWidth / 2) + 20 : leftX
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Programs:', programsColX, bottomY)
+      
+      let programsX = programsColX + 22
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      selectedPrograms.forEach((skill) => {
+        const displayName = skill.skill_name.replace(/^Programs for Next Season:\s*/i, '')
+        doc.text(displayName, programsX, bottomY)
+        programsX += displayName.length * 1.8 + 6
+      })
+    }
+    
+    bottomY += lineHeight + 10
+  }
+  
+  // Goals underneath Training and Programs
+  doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
-  doc.text('Goals:', leftX, bottomY)
+  doc.text('Goals for next season', leftX, bottomY)
   bottomY += lineHeight + 1
   
-  // Comments/goals box
+  // Comments/goals text
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7)
   const comments = notes || ''
-  const splitComments = doc.splitTextToSize(comments, 85)
+  const splitComments = doc.splitTextToSize(comments, pageWidth - margin * 2)
   doc.text(splitComments, leftX, bottomY)
-  
-  // Draw box around comments
-  const boxHeight = Math.max(20, splitComments.length * 3.5)
-  doc.rect(leftX, bottomY - 3, 85, boxHeight)
-  
-  // RIGHT SIDE - Season, Training and Programs
-  const rightColX = (pageWidth / 2) + 5
-  let rightY = quarterPage * 3 + 8
-  
-  // Season/Year
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`Season: ${season}`, rightColX, rightY)
-  rightY += lineHeight + 4
-  
-  // Get selected training items
-  const selectedTraining = skillScores.filter(s => 
-    s.skill_id.startsWith('training-') && s.score && s.score >= 3
-  )
-  
-  // Only show Suggested Training if there are selected items
-  if (selectedTraining.length > 0) {
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Training:', rightColX, rightY)
-    rightY += lineHeight + 1
-    
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    selectedTraining.forEach((skill) => {
-      doc.text(`• ${skill.skill_name}`, rightColX + 5, rightY)
-      rightY += lineHeight
-    })
-    rightY += lineHeight
-  }
-  
-  // Get selected programs
-  const selectedPrograms = skillScores.filter(s => 
-    s.skill_id.startsWith('program-') && s.score && s.score >= 3
-  )
-  
-  // Only show Programs if there are selected items
-  if (selectedPrograms.length > 0) {
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Programs:', rightColX, rightY)
-    rightY += lineHeight + 1
-    
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    selectedPrograms.forEach((skill) => {
-      doc.text(`• ${skill.skill_name}`, rightColX + 5, rightY)
-      rightY += lineHeight
-    })
-  }
   
   // "See you next season!" at bottom of page
   doc.setFontSize(14)
@@ -296,9 +334,9 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   return doc.output('datauristring')
 }
 
-async function loadSkierAsBase64(): Promise<string | null> {
+async function loadSkierLogoAsBase64(): Promise<string | null> {
   try {
-    const response = await fetch('/skier.png')
+    const response = await fetch('/skierlogo.png')
     if (!response.ok) return null
     const blob = await response.blob()
     return new Promise((resolve) => {
@@ -311,9 +349,9 @@ async function loadSkierAsBase64(): Promise<string | null> {
   }
 }
 
-async function loadMountainsAsBase64(): Promise<string | null> {
+async function loadPointyAsBase64(): Promise<string | null> {
   try {
-    const response = await fetch('/mountains.png')
+    const response = await fetch('/pointy.png')
     if (!response.ok) return null
     const blob = await response.blob()
     return new Promise((resolve) => {

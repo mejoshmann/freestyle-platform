@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react'
 import type { Skill, SkillScore, TemplateCategory } from '../../types'
+import { uploadAthleteMedia } from '../../lib/media'
+import { useAuth } from '../../context/AuthContext'
 import EvalHeader from './EvalHeader'
 import SkillsList from './SkillsList'
 import DesktopActions from './DesktopActions'
 import MobileEvalNav from './MobileEvalNav'
 
 interface SkillEvaluatorProps {
+  athleteId: string
   athleteName: string
   skills: Skill[]
   categories?: TemplateCategory[]
@@ -15,6 +18,7 @@ interface SkillEvaluatorProps {
 }
 
 export default function SkillEvaluator({ 
+  athleteId,
   athleteName, 
   skills, 
   categories, 
@@ -22,6 +26,7 @@ export default function SkillEvaluator({
   onCancel, 
   onBackToRoster 
 }: SkillEvaluatorProps) {
+  const { coach } = useAuth()
   // State
   const [scores, setScores] = useState<SkillScore[]>(
     skills.map(skill => ({
@@ -50,10 +55,29 @@ export default function SkillEvaluator({
 
 
 
-  const handleCaptureMedia = useCallback((_file: File) => {
-    // In production, upload to storage and store URL
-    // File captured for upload
-  }, [])
+  const handleCaptureMedia = useCallback(async (file: File) => {
+    if (!coach || !athleteId) {
+      alert('Cannot upload media: missing coach or athlete information')
+      return
+    }
+    
+    const result = await uploadAthleteMedia(
+      athleteId,
+      athleteName,
+      file,
+      {
+        coachId: coach.id,
+        description: `Captured during evaluation - ${athleteName}`,
+        tags: [athleteName, 'evaluation']
+      }
+    )
+    
+    if (result.error) {
+      alert('Failed to upload media: ' + result.error)
+    } else {
+      console.log('Media uploaded successfully:', result.url)
+    }
+  }, [athleteId, athleteName, coach])
 
   const handleBackToRoster = useCallback(() => {
     if (onBackToRoster) {
