@@ -37,7 +37,7 @@ async function loadLogoAsBase64(): Promise<string | null> {
 
 export async function generateReportCardPDF(data: ReportCardData): Promise<string> {
   const doc = new jsPDF()
-  const { athlete, coachName, skillScores, notes, season, date } = data
+  const { athlete, coachName, skillScores, notes, season } = data
   
   // Page dimensions
   const pageWidth = 210
@@ -166,7 +166,6 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   
   // Layout constants - reduced spacing
   const categoryRowHeight = 8
-  const categoryGap = 2
   
   // Column positions
   const categoryColX = leftX
@@ -264,14 +263,14 @@ export async function generateReportCardPDF(data: ReportCardData): Promise<strin
   bottomY += lineHeight + 2
   
   // Training and Programs inline (side by side)
-  // Get selected training items (Yes/No - score of 1 means Yes/Recommended)
+  // Get selected training items (score of 4 means Recommended/Selected)
   const selectedTraining = skillScores.filter(s => 
-    s.skill_id.startsWith('training-') && s.score === 1
+    s.skill_id.startsWith('training-') && s.score === 4
   )
   
-  // Get selected programs (Yes/No - score of 1 means Yes/Selected)
+  // Get selected programs (score of 4 means Yes/Selected)
   const selectedPrograms = skillScores.filter(s => 
-    s.skill_id.startsWith('program-') && s.score === 1
+    s.skill_id.startsWith('program-') && s.score === 4
   )
   
   // Only show Training/Programs section if at least one is selected
