@@ -169,7 +169,8 @@ export default function AdminPanel() {
       skillScores: reportCard.evaluation?.skill_scores || [],
       notes: reportCard.evaluation?.notes || '',
       season: '2025/26',
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleDateString(),
+      groupName: reportCard.evaluation?.group_name
     })
     // Extract base64 content for email (remove data URL prefix)
     const pdfBase64 = pdfDataUrl.split(',')[1]
@@ -238,7 +239,8 @@ export default function AdminPanel() {
             skillScores: evaluation.skill_scores || [],
             notes: evaluation.notes || '',
             season: '2025/26',
-            date: new Date().toLocaleDateString()
+            date: new Date().toLocaleDateString(),
+            groupName: evaluation.group_name
           })
           // Convert data URL to blob URL for better iframe compatibility
           const byteString = atob(pdfBase64.split(',')[1])
@@ -383,10 +385,10 @@ export default function AdminPanel() {
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">
-          <nav className="flex space-x-8">
+          <nav className="flex flex-wrap gap-x-4 gap-y-1">
             <button
               onClick={() => setActiveTab('import')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'import'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -396,7 +398,7 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('athletes')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'athletes'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -406,7 +408,7 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('coaches')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'coaches'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -416,7 +418,7 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('report-cards')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'report-cards'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -426,7 +428,7 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('evaluations')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'evaluations'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -474,7 +476,7 @@ export default function AdminPanel() {
             ) : (
               <div className="bg-white rounded-lg shadow overflow-hidden">
                 {/* Bulk Actions Bar */}
-                <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                <div className="px-4 md:px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -500,7 +502,8 @@ export default function AdminPanel() {
                   )}
                 </div>
 
-                <table className="min-w-full divide-y divide-gray-200">
+                {/* Desktop Table */}
+                <table className="hidden md:table min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10"></th>
@@ -542,6 +545,43 @@ export default function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {athletes.map((athlete) => (
+                    <div key={athlete.id} className={`p-4 ${selectedAthletes.has(athlete.id) ? 'bg-blue-50' : 'bg-white'}`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedAthletes.has(athlete.id)}
+                          onChange={() => toggleAthleteSelection(athlete.id)}
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 break-words">{athlete.full_name}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 pl-7">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Email</span>
+                          <span className="text-sm text-gray-700 break-words">{athlete.email || '-'}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Date of Birth</span>
+                          <span className="text-sm text-gray-700">{athlete.date_of_birth || '-'}</span>
+                        </div>
+                      </div>
+                      <div className="mt-3 pl-7">
+                        <button
+                          onClick={() => deleteAthlete(athlete.id)}
+                          className="w-full py-2.5 px-4 bg-red-50 text-red-600 text-sm font-medium rounded hover:bg-red-100 min-h-[44px]"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -554,7 +594,8 @@ export default function AdminPanel() {
               <div className="text-center py-8">Loading...</div>
             ) : (
               <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
+                {/* Desktop Table */}
+                <table className="hidden md:table min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -591,6 +632,40 @@ export default function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {coaches.map((c) => (
+                    <div key={c.id} className="p-4 bg-white">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-900 break-words">{c.full_name}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Email</span>
+                          <span className="text-sm text-gray-700 break-words">{c.email}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Admin</span>
+                          <button
+                            onClick={() => toggleAdminStatus(c.id, c.is_admin || false)}
+                            className={`mt-1 px-3 py-2 rounded text-sm font-medium min-h-[44px] w-fit ${
+                              c.is_admin
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {c.is_admin ? 'Yes' : 'No'}
+                          </button>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Joined</span>
+                          <span className="text-sm text-gray-700">{new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -607,7 +682,8 @@ export default function AdminPanel() {
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
+                {/* Desktop Table */}
+                <table className="hidden md:table min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Athlete</th>
@@ -639,6 +715,35 @@ export default function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {evaluations.map((ev) => (
+                    <div key={ev.id} className="p-4 bg-white">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-900 break-words">{ev.athlete_name}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Coach</span>
+                          <span className="text-sm text-gray-700 break-words">{ev.coach_name}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Skills Evaluated</span>
+                          <span className="text-sm text-gray-700">{ev.skill_scores?.length || 0} skills</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Date</span>
+                          <span className="text-sm text-gray-700">{new Date(ev.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Notes</span>
+                          <span className="text-sm text-gray-700 break-words">{ev.notes || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -655,7 +760,8 @@ export default function AdminPanel() {
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
+                {/* Desktop Table */}
+                <table className="hidden md:table min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Athlete</th>
@@ -718,6 +824,68 @@ export default function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {reportCards.map((rc) => (
+                    <div key={rc.id} className="p-4 bg-white">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-900 break-words">{rc.athlete_name}</p>
+                      </div>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Coach</span>
+                          <span className="text-sm text-gray-700 break-words">{rc.coach_name}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Status</span>
+                          <span className={`inline-block mt-1 px-2 py-1 rounded text-xs font-medium w-fit ${
+                            rc.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            rc.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            rc.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {rc.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">Submitted</span>
+                          <span className="text-sm text-gray-700">{new Date(rc.created_at).toLocaleDateString()}</span>
+                        </div>
+                        {rc.sent_to_parents && (
+                          <div className="flex flex-col">
+                            <span className="text-xs text-gray-500 uppercase tracking-wider">Sent</span>
+                            <span className="text-sm text-gray-400">{new Date(rc.sent_at!).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => loadReportCardPreview(rc)}
+                          className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 text-sm font-medium rounded hover:bg-gray-200 min-h-[44px]"
+                        >
+                          Preview
+                        </button>
+                        {rc.status === 'pending' && (
+                          <button
+                            onClick={() => openReviewModal(rc)}
+                            className="w-full py-2.5 px-4 bg-blue-50 text-blue-600 text-sm font-medium rounded hover:bg-blue-100 min-h-[44px]"
+                          >
+                            Review
+                          </button>
+                        )}
+                        {rc.status === 'approved' && !rc.sent_to_parents && (
+                          <button
+                            onClick={() => sendReportCard(rc.id)}
+                            className="w-full py-2.5 px-4 bg-green-50 text-green-600 text-sm font-medium rounded hover:bg-green-100 min-h-[44px]"
+                          >
+                            Send to Parents
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -734,6 +902,9 @@ export default function AdminPanel() {
                 <p className="text-gray-700">
                   <strong>Athlete:</strong> {selectedReportCard.athlete_name}<br/>
                   <strong>Coach:</strong> {selectedReportCard.coach_name}<br/>
+                  {selectedEvaluation.group_name && (
+                    <><strong>Group Name:</strong> {selectedEvaluation.group_name}<br/></>
+                  )}
                   <strong>Submitted:</strong> {new Date(selectedReportCard.created_at).toLocaleString()}
                 </p>
               </div>
@@ -743,30 +914,96 @@ export default function AdminPanel() {
                 <h4 className="font-bold text-lg mb-3 border-b pb-2">Skill Evaluations (Editable)</h4>
                 {editableScores.length > 0 ? (
                   <div className="space-y-3">
-                    {editableScores.map((score: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
-                        <span className="font-medium flex-1">{score.skill_name}</span>
-                        <div className="flex gap-2">
-                          {[1, 2, 3, 4].map((num) => (
+                    {editableScores.map((score: any, index: number) => {
+                      // Check if this is a training skill or program skill
+                      const isTrainingSkill = score.skill_id?.startsWith('training-')
+                      const isProgramSkill = score.skill_id?.startsWith('program-')
+                      
+                      // Helper to check if current score is "Yes"/"Recommended"
+                      const isYesValue = (val: number | string | null): boolean => {
+                        if (val === null) return false
+                        if (val === "Yes" || val === "Recommended") return true
+                        if (typeof val === 'number' && (val === 3 || val === 4)) return true
+                        return false
+                      }
+                      
+                      return (
+                        <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
+                          <span className="font-medium flex-1">{score.skill_name}</span>
+                          {isTrainingSkill ? (
+                            // Single "Recommended" toggle for Training skills - click to select, click again to deselect
                             <button
-                              key={num}
                               onClick={() => {
                                 const newScores = [...editableScores]
-                                newScores[index].score = num
+                                // Toggle between "Recommended" and null
+                                newScores[index].score = isYesValue(score.score) ? null : "Recommended"
                                 setEditableScores(newScores)
                               }}
-                              className={`w-10 h-10 flex items-center justify-center border rounded font-medium transition-colors ${
-                                score.score === num 
+                              className={`px-4 py-2 flex items-center justify-center border rounded font-medium transition-colors ${
+                                isYesValue(score.score)
                                   ? 'bg-blue-500 text-white border-blue-500' 
                                   : 'bg-white text-gray-600 hover:bg-gray-50'
                               }`}
                             >
-                              {num}
+                              {isYesValue(score.score) ? "Recommended" : "Select"}
                             </button>
-                          ))}
+                          ) : isProgramSkill ? (
+                            // Yes/No toggle for Program skills
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  const newScores = [...editableScores]
+                                  newScores[index].score = "Yes"
+                                  setEditableScores(newScores)
+                                }}
+                                className={`px-4 py-2 flex items-center justify-center border rounded font-medium transition-colors ${
+                                  isYesValue(score.score)
+                                    ? 'bg-green-500 text-white border-green-500' 
+                                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                                }`}
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const newScores = [...editableScores]
+                                  newScores[index].score = "No"
+                                  setEditableScores(newScores)
+                                }}
+                                className={`px-4 py-2 flex items-center justify-center border rounded font-medium transition-colors ${
+                                  score.score === "No"
+                                    ? 'bg-gray-500 text-white border-gray-500' 
+                                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                                }`}
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            // Numeric buttons for regular skills
+                            <div className="flex gap-2">
+                              {[1, 2, 3, 4].map((num) => (
+                                <button
+                                  key={num}
+                                  onClick={() => {
+                                    const newScores = [...editableScores]
+                                    newScores[index].score = num
+                                    setEditableScores(newScores)
+                                  }}
+                                  className={`w-10 h-10 flex items-center justify-center border rounded font-medium transition-colors ${
+                                    score.score === num 
+                                      ? 'bg-blue-500 text-white border-blue-500' 
+                                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {num}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <p className="text-gray-500">No skills evaluated</p>

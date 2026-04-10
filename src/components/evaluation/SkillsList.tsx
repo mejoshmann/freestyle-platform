@@ -6,7 +6,7 @@ interface SkillsListProps {
   skills: Skill[]
   categories?: TemplateCategory[]
   scores: SkillScore[]
-  onScoreChange: (skillId: string, value: number | null) => void
+  onScoreChange: (skillId: string, value: number | string | null) => void
 }
 
 export default function SkillsList({ skills, categories, scores, onScoreChange }: SkillsListProps) {

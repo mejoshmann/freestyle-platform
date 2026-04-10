@@ -131,7 +131,7 @@ export default function AddAthletes() {
               {searchTerm ? 'No athletes match your search.' : 'No available athletes to add.'}
             </p>
             <button
-              onClick={() => navigate('/import')}
+              onClick={() => navigate('/import-athletes')}
               className="mt-4 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Import New Athletes

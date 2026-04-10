@@ -26,7 +26,7 @@ export default function EvaluationForm({
   )
   const [notes, setNotes] = useState('')
 
-  function updateScore(skillId: string, value: number | null) {
+  function updateScore(skillId: string, value: number | string | null) {
     setScores(prev => prev.map(s => 
       s.skill_id === skillId ? { ...s, score: value } : s
     ))

@@ -11,16 +11,16 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
   const [loading, setLoading] = useState(true)
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null)
 
-  useEffect(() => {
-    loadMedia()
-  }, [athleteId])
-
   const loadMedia = async () => {
     setLoading(true)
     const data = await getAthleteMedia(athleteId)
     setMedia(data)
     setLoading(false)
   }
+
+  useEffect(() => {
+    loadMedia()
+  }, [athleteId])
 
   const handleDelete = async (item: MediaItem) => {
     if (!confirm(`Are you sure you want to delete this ${item.type}?`)) return
@@ -113,6 +113,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
                     src={video.public_url}
                     className="w-full h-full object-cover"
                     preload="metadata"
+                    crossOrigin="anonymous"
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-colors">
                     <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
@@ -157,6 +158,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
                 controls
                 autoPlay
                 className="w-full rounded-lg"
+                crossOrigin="anonymous"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (

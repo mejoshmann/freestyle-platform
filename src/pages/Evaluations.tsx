@@ -9,8 +9,9 @@ interface Evaluation {
   id: string
   athlete_id: string
   coach_id: string
-  skill_scores: { skill_id: string; skill_name: string; score: number | null }[]
+  skill_scores: { skill_id: string; skill_name: string; score: number | string | null }[]
   notes: string
+  group_name?: string
   created_at: string
 }
 
@@ -21,10 +22,6 @@ export default function Evaluations() {
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadData()
-  }, [athleteId, coach])
 
   async function loadData() {
     if (!coach || !athleteId) {
@@ -55,6 +52,10 @@ export default function Evaluations() {
     if (evaluationsData) setEvaluations(evaluationsData)
     setLoading(false)
   }
+
+  useEffect(() => {
+    loadData()
+  }, [athleteId, coach])
 
   if (loading) {
     return (
@@ -115,9 +116,16 @@ export default function Evaluations() {
             {evaluations.map((evaluation, index) => (
               <div key={evaluation.id} className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Evaluation #{evaluations.length - index}
-                  </h3>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Evaluation #{evaluations.length - index}
+                    </h3>
+                    {evaluation.group_name && (
+                      <p className="text-sm text-blue-600 mt-1">
+                        Group: {evaluation.group_name}
+                      </p>
+                    )}
+                  </div>
                   {evaluation.created_at && (
                     <span className="text-sm text-gray-500">
                       {new Date(evaluation.created_at).toLocaleDateString('en-US', {
@@ -135,12 +143,55 @@ export default function Evaluations() {
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Skill Scores</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {evaluation.skill_scores?.filter((s: any) => s.score !== null).map((skill: any) => (
-                      <div key={skill.skill_id} className="flex justify-between bg-gray-50 rounded px-3 py-2">
-                        <span className="text-sm text-gray-600 truncate mr-2">{skill.skill_name}</span>
-                        <span className="text-sm font-medium text-blue-600">{skill.score}</span>
-                      </div>
-                    ))}
+                    {evaluation.skill_scores?.filter((s: { skill_id: string; skill_name: string; score: number | string | null }) => {
+                      // For training skills, only show if recommended (hide null/Not Recommended)
+                      const isTrainingSkill = s.skill_id?.startsWith('training-')
+                      if (isTrainingSkill) {
+                        const isRecommended = s.score === "Recommended" || s.score === 3 || s.score === 4
+                        return isRecommended
+                      }
+                      // For all other skills, show if score is not null
+                      return s.score !== null
+                    }).map((skill: { skill_id: string; skill_name: string; score: number | string | null }) => {
+                      // Check if this is a training skill or program skill
+                      const isTrainingSkill = skill.skill_id?.startsWith('training-')
+                      const isProgramSkill = skill.skill_id?.startsWith('program-')
+                      const isToggleSkill = isTrainingSkill || isProgramSkill
+                      
+                      // Helper to check if score is "Yes"/"Recommended" (handles both string and legacy numeric)
+                      const isYesValue = (val: number | string | null): boolean => {
+                        if (val === null) return false
+                        if (val === "Yes" || val === "Recommended") return true
+                        if (typeof val === 'number' && (val === 3 || val === 4)) return true
+                        return false
+                      }
+                      
+                      // Get display value for toggle skills (convert legacy numeric to text)
+                      const getDisplayValue = (val: number | string | null): string => {
+                        if (val === null) return '-'
+                        // For toggle skills, convert legacy numeric values to text
+                        if (isToggleSkill && typeof val === 'number') {
+                          if (val === 3 || val === 4) return isTrainingSkill ? "Recommended" : "Yes"
+                          if (val === 1 || val === 2) return isTrainingSkill ? "" : "No"
+                        }
+                        // For training skills, only show "Recommended" - hide "Not Recommended"
+                        if (isTrainingSkill && val === "Not Recommended") return ""
+                        return String(val)
+                      }
+                      
+                      // Determine display color based on score value
+                      let scoreColorClass = 'text-blue-600'
+                      if (isYesValue(skill.score)) {
+                        scoreColorClass = 'text-green-600'
+                      }
+                      
+                      return (
+                        <div key={skill.skill_id} className="flex justify-between bg-gray-50 rounded px-3 py-2">
+                          <span className="text-sm text-gray-600 truncate mr-2">{skill.skill_name}</span>
+                          <span className={`text-sm font-medium ${scoreColorClass}`}>{getDisplayValue(skill.score)}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
 
@@ -152,13 +203,15 @@ export default function Evaluations() {
                   </div>
                 )}
 
-                {/* Report Card Button */}
-                <button
-                  onClick={() => alert('Report card generation coming soon!')}
-                  className="w-full py-2 px-4 border border-blue-300 text-blue-600 rounded hover:bg-blue-50"
-                >
-                  Generate Report Card
-                </button>
+                {/* Report Card Button - Admin Only */}
+                {coach?.is_admin && (
+                  <button
+                    onClick={() => alert('Report card generation coming soon!')}
+                    className="w-full py-2 px-4 border border-blue-300 text-blue-600 rounded hover:bg-blue-50"
+                  >
+                    Generate Report Card
+                  </button>
+                )}
               </div>
             ))}
           </div>

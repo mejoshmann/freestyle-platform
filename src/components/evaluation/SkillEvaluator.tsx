@@ -7,12 +7,35 @@ import SkillsList from './SkillsList'
 import DesktopActions from './DesktopActions'
 import MobileEvalNav from './MobileEvalNav'
 
+// Categories that should use Yes/No or Recommended instead of 1-4 slider
+const yesNoCategories = ['Programs for Next Season']
+const recommendedCategories = ['Suggested Training']
+
+function isToggleSkill(skill: Skill): boolean {
+  const skillNameLower = skill.name.toLowerCase()
+  const skillIdLower = skill.id.toLowerCase()
+  
+  const isYesNoSkill = yesNoCategories.some(cat => {
+    const catLower = cat.toLowerCase()
+    return skillNameLower.includes(catLower) || 
+           skillIdLower.startsWith('program-')
+  })
+  
+  const isRecommendedSkill = recommendedCategories.some(cat => {
+    const catLower = cat.toLowerCase()
+    return skillNameLower.includes(catLower) || 
+           skillIdLower.startsWith('training-')
+  })
+  
+  return isYesNoSkill || isRecommendedSkill
+}
+
 interface SkillEvaluatorProps {
   athleteId: string
   athleteName: string
   skills: Skill[]
   categories?: TemplateCategory[]
-  onSave: (scores: SkillScore[], notes: string, voiceNotes?: string[]) => void
+  onSave: (scores: SkillScore[], notes: string, groupName: string, voiceNotes?: string[]) => void
   onCancel: () => void
   onBackToRoster?: () => void
 }
@@ -32,17 +55,18 @@ export default function SkillEvaluator({
     skills.map(skill => ({
       skill_id: skill.id,
       skill_name: skill.name,
-      score: 3  // Default to 3, coach can skip if not applicable
+      score: isToggleSkill(skill) ? null : 3  // Toggle skills default to null, regular skills default to 3
     }))
   )
   const [notes, setNotes] = useState('')
+  const [groupName, setGroupName] = useState('')
 
   // Computed values
   const evaluatedCount = scores.filter(s => s.score !== null).length
   const skippedCount = scores.filter(s => s.score === null).length
 
   // Handlers
-  const updateScore = useCallback((skillId: string, value: number | null) => {
+  const updateScore = useCallback((skillId: string, value: number | string | null) => {
     setScores(prev => prev.map(s => 
       s.skill_id === skillId ? { ...s, score: value } : s
     ))
@@ -50,8 +74,8 @@ export default function SkillEvaluator({
 
   const handleSave = useCallback(() => {
     const evaluatedScores = scores.filter(s => s.score !== null)
-    onSave(evaluatedScores, notes)
-  }, [scores, notes, onSave])
+    onSave(evaluatedScores, notes, groupName)
+  }, [scores, notes, groupName, onSave])
 
 
 
@@ -96,6 +120,21 @@ export default function SkillEvaluator({
         totalCount={skills.length}
         skippedCount={skippedCount}
       />
+
+      {/* Group Name Input */}
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Group Name
+        </label>
+        <input
+          type="text"
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g. Snow Riders, Mountain Hawks"
+        />
+        <p className="text-xs text-gray-500 mt-1">Optional: Enter a custom name for your group</p>
+      </div>
 
       {/* Skills by Category */}
       <SkillsList 

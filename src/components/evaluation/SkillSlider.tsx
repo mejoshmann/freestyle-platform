@@ -2,8 +2,8 @@ import type { Skill } from '../../types'
 
 interface SkillSliderProps {
   skill: Skill
-  value: number | null
-  onChange: (value: number | null) => void
+  value: number | string | null
+  onChange: (value: number | string | null) => void
 }
 
 // Categories that should use Yes/No or Recommended instead of 1-4 slider
@@ -29,16 +29,16 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
            skillIdLower.startsWith('training-')
   })
   
-  const isToggleSkill = isYesNoSkill || isRecommendedSkill
+  // isToggleSkill is implicitly handled by isYesNoSkill and isRecommendedSkill checks
   
   // For toggle skills, default to off (1) instead of 3
   const displayValue = value ?? '-'
 
   // Handle toggle
   const handleToggle = () => {
-    if (isToggleSkill) {
-      // Toggle between on (4) and off (1)
-      onChange(value && value >= 3 ? 1 : 4)
+    if (isRecommendedSkill) {
+      // Toggle between "Recommended" and null (deselect/skip)
+      onChange(value === "Recommended" ? null : "Recommended")
     } else {
       // Regular skip/enable
       onChange(isSkipped ? 3 : null)
@@ -47,7 +47,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
 
   if (isYesNoSkill) {
     // Simple Yes toggle for Programs - click to select, click again to deselect
-    const isYes = value && value >= 3
+    const isYes = value === "Yes"
     return (
       <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
         <div className="flex justify-between items-center">
@@ -55,14 +55,14 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             {skill.name}
           </label>
           <button
-            onClick={() => onChange(isYes ? null : 4)}
+            onClick={() => onChange(isYes ? null : "Yes")}
             className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
               isYes
                 ? 'bg-green-500 text-white hover:bg-green-600'
                 : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
             }`}
           >
-            {isYes ? 'YES' : 'SELECT'}
+            {isYes ? '✓ Yes' : 'Yes'}
           </button>
         </div>
         {skill.description && (
@@ -73,8 +73,8 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
   }
 
   if (isRecommendedSkill) {
-    // Recommended/Not Recommended toggle for Training
-    const isRecommended = value && value >= 3
+    // Single "Recommended" toggle for Training - click to select, click again to deselect
+    const isRecommended = value === "Recommended"
     return (
       <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
         <div className="flex justify-between items-center">
@@ -86,12 +86,10 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
               isRecommended
                 ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : isSkipped
-                ? 'bg-gray-200 text-gray-500 hover:bg-gray-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
             }`}
           >
-            {isRecommended ? 'RECOMMENDED' : isSkipped ? 'N/A' : 'NOT RECOMMENDED'}
+            {isRecommended ? '✓ Recommended' : 'Recommended'}
           </button>
         </div>
         {skill.description && (

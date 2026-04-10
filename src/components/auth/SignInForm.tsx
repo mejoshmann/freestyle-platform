@@ -3,9 +3,10 @@ import { useState } from 'react'
 interface SignInFormProps {
   onSubmit: (email: string, password: string) => Promise<void>
   error: string
+  onForgotPassword?: () => void
 }
 
-export default function SignInForm({ onSubmit, error }: SignInFormProps) {
+export default function SignInForm({ onSubmit, error, onForgotPassword }: SignInFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -54,6 +55,18 @@ export default function SignInForm({ onSubmit, error }: SignInFormProps) {
       >
         Sign In
       </button>
+
+      {onForgotPassword && (
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-sm text-blue-600 hover:text-blue-500"
+          >
+            Forgot Password?
+          </button>
+        </div>
+      )}
     </form>
   )
 }

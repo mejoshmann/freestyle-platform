@@ -20,17 +20,24 @@ export async function uploadAthleteVideo(
   const filename = `${athleteId}/${timestamp}.webm`
   
   // Upload to Supabase Storage
-  const { error: uploadError } = await supabase
-    .storage
-    .from('athlete-videos')
-    .upload(filename, videoBlob, {
-      contentType: 'video/webm',
-      upsert: false
-    })
+  let uploadResult
+  try {
+    uploadResult = await supabase
+      .storage
+      .from('athlete-videos')
+      .upload(filename, videoBlob, {
+        contentType: 'video/webm',
+        upsert: false
+      })
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown upload error'
+    console.error('Upload error (exception):', err)
+    throw new Error(`Storage upload failed: ${errorMsg}`)
+  }
   
-  if (uploadError) {
-    console.error('Upload error:', uploadError)
-    return { url: '', path: '', error: uploadError.message }
+  if (uploadResult.error) {
+    console.error('Upload error:', uploadResult.error)
+    throw new Error(`Storage upload failed: ${uploadResult.error.message}`)
   }
   
   // Get public URL
@@ -40,21 +47,30 @@ export async function uploadAthleteVideo(
     .getPublicUrl(filename)
   
   // Save video metadata to database
-  const { error: dbError } = await supabase
-    .from('athlete_videos')
-    .insert({
-      athlete_id: athleteId,
-      storage_path: filename,
-      public_url: publicUrl,
-      coach_id: metadata?.coachId,
-      description: metadata?.description,
-      tags: metadata?.tags || [],
-      created_at: new Date().toISOString()
-    })
+  let dbResult
+  try {
+    dbResult = await supabase
+      .from('athlete_videos')
+      .insert({
+        athlete_id: athleteId,
+        storage_path: filename,
+        public_url: publicUrl,
+        coach_id: metadata?.coachId,
+        description: metadata?.description,
+        tags: metadata?.tags || [],
+        created_at: new Date().toISOString()
+      })
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown database error'
+    console.error('Database error (exception):', err)
+    console.error(`CRITICAL: Storage upload succeeded but database insert failed. File: ${filename} in bucket: athlete-videos`)
+    throw new Error(`Database insert failed after successful upload: ${errorMsg}`)
+  }
   
-  if (dbError) {
-    console.error('Database error:', dbError)
-    return { url: '', path: '', error: dbError.message }
+  if (dbResult.error) {
+    console.error('Database error:', dbResult.error)
+    console.error(`CRITICAL: Storage upload succeeded but database insert failed. File: ${filename} in bucket: athlete-videos`)
+    throw new Error(`Database insert failed after successful upload: ${dbResult.error.message}`)
   }
   
   return { url: publicUrl, path: filename }

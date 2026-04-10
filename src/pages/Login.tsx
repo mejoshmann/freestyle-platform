@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import SignInForm from '../components/auth/SignInForm'
 import SignUpForm from '../components/auth/SignUpForm'
+import ForgotPasswordForm from '../components/auth/ForgotPasswordForm'
+
+type AuthMode = 'signIn' | 'signUp' | 'forgotPassword'
 
 export default function Login() {
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [mode, setMode] = useState<AuthMode>('signIn')
   const [error, setError] = useState('')
   const { signIn, signUp } = useAuth()
 
@@ -26,12 +29,38 @@ export default function Login() {
     }
   }
 
-  const toggleMode = (
+  function handleForgotPassword() {
+    setMode('forgotPassword')
+    setError('')
+  }
+
+  function handleBackToSignIn() {
+    setMode('signIn')
+    setError('')
+  }
+
+  function toggleSignUpMode() {
+    setMode(mode === 'signIn' ? 'signUp' : 'signIn')
+    setError('')
+  }
+
+  const getTitle = () => {
+    switch (mode) {
+      case 'signUp':
+        return 'Create Account'
+      case 'forgotPassword':
+        return 'Reset Password'
+      default:
+        return 'Sign In'
+    }
+  }
+
+  const footerButton = mode !== 'forgotPassword' && (
     <button
-      onClick={() => setIsSignUp(!isSignUp)}
+      onClick={toggleSignUpMode}
       className="text-blue-600 hover:text-blue-500"
     >
-      {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+      {mode === 'signUp' ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
     </button>
   )
 
@@ -49,13 +78,15 @@ export default function Login() {
       
       {/* Auth Card - No grey background */}
       <div className="w-full max-w-md space-y-6 p-6 bg-white rounded-lg shadow">
-        <h2 className="text-3xl font-bold text-center">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
-        {isSignUp ? (
+        <h2 className="text-3xl font-bold text-center">{getTitle()}</h2>
+        {mode === 'signUp' ? (
           <SignUpForm onSubmit={handleSignUp} error={error} />
+        ) : mode === 'forgotPassword' ? (
+          <ForgotPasswordForm onBackToSignIn={handleBackToSignIn} />
         ) : (
-          <SignInForm onSubmit={handleSignIn} error={error} />
+          <SignInForm onSubmit={handleSignIn} error={error} onForgotPassword={handleForgotPassword} />
         )}
-        <div className="text-center">{toggleMode}</div>
+        <div className="text-center">{footerButton}</div>
       </div>
     </div>
   )

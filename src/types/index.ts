@@ -70,7 +70,7 @@ export interface Evaluation {
 export interface SkillScore {
   skill_id: string
   skill_name: string
-  score: number | null  // null = not evaluated/skipped
+  score: number | string | null  // null = not evaluated/skipped, string for toggle skills ("Yes"/"No"/"Recommended"/"Not Recommended")
 }
 
 export interface AthleteVideo {

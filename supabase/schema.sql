@@ -188,6 +188,7 @@ create table if not exists evaluations (
   template_id uuid references evaluation_templates(id) on delete cascade,
   skill_scores jsonb not null default '[]',
   notes text,
+  group_name text,  -- Custom group name given by athletes (e.g., "Snow Riders", "Mountain Hawks")
   evaluated_at timestamp with time zone default timezone('utc'::text, now()) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -246,6 +247,37 @@ create policy "Coaches can manage their photos"
 -- Admins can read all photos
 create policy "Admins can read all photos"
   on athlete_photos for select
+  to authenticated
+  using (
+    exists (
+      select 1 from coaches c 
+      where c.id = auth.uid() and c.is_admin = true
+    )
+  );
+
+-- Athlete videos table (similar to athlete_photos)
+create table if not exists athlete_videos (
+  id uuid default gen_random_uuid() primary key,
+  athlete_id uuid references athletes(id) on delete cascade not null,
+  coach_id uuid references coaches(id) on delete cascade,
+  storage_path text not null,
+  public_url text not null,
+  description text,
+  tags text[] default '{}',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on athlete_videos
+alter table athlete_videos enable row level security;
+
+-- Coaches can manage their own videos
+create policy "Coaches can manage their videos"
+  on athlete_videos for all
+  using (auth.uid() = coach_id);
+
+-- Admins can read all videos
+create policy "Admins can read all videos"
+  on athlete_videos for select
   to authenticated
   using (
     exists (

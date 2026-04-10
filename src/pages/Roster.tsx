@@ -38,10 +38,6 @@ export default function Roster() {
   // All skills from all categories (default)
   const allSkills: Skill[] = defaultTemplates.flatMap(t => t.skills)
 
-  useEffect(() => {
-    loadData()
-  }, [coach])
-
   async function loadData() {
     if (!coach) {
       setLoading(false)
@@ -95,9 +91,14 @@ export default function Roster() {
     setLoading(false)
   }
 
+  useEffect(() => {
+    loadData()
+  }, [coach])
+
   async function handleSaveEvaluation(
-    scores: { skill_id: string; skill_name: string; score: number | null }[], 
-    notes: string
+    scores: { skill_id: string; skill_name: string; score: number | string | null }[], 
+    notes: string,
+    groupName: string
   ) {
     if (!coach || !selectedAthlete) return
 
@@ -105,7 +106,8 @@ export default function Roster() {
       athlete_id: selectedAthlete.id,
       coach_id: coach.id,
       skill_scores: scores,
-      notes
+      notes,
+      group_name: groupName || null
     }
 
     const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
