@@ -43,6 +43,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .single()
     
     if (data) {
+      // Check if full_name needs to be updated from user metadata
+      const metadataName = fullName || data.user_metadata?.full_name
+      if (metadataName && (!data.full_name || data.full_name === email || data.full_name.includes('@'))) {
+        const { data: updatedData, error: updateError } = await supabase
+          .from('coaches')
+          .update({ full_name: metadataName })
+          .eq('id', userId)
+          .select()
+          .single()
+        
+        if (!updateError && updatedData) {
+          setCoach(updatedData)
+          return
+        }
+      }
       setCoach(data)
     } else if (email && (error?.code === 'PGRST116' || !data)) {
       // Coach record doesn't exist (PGRST116 = no rows returned), create it

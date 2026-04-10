@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import type { Athlete } from "../../types";
+import { registerMontserrat } from "../../lib/registerFonts";
 
 interface SkillScore {
   skill_id: string;
@@ -68,13 +69,14 @@ async function compressImage(
 
 async function loadLogoAsBase64(): Promise<string | null> {
   // Logo is small (177x177), keep it sharp with higher quality
-  return compressImage("/logo.png", 200, 200, 0.8, true);
+  return compressImage("/logo.png", 400, 400, 0.9, true);
 }
 
 export async function generateReportCardPDF(
   data: ReportCardData,
 ): Promise<string> {
   const doc = new jsPDF({ compress: true });
+  registerMontserrat(doc);
   const { athlete, coachName, skillScores, notes, season, groupName } = data;
 
   // Page dimensions
@@ -96,6 +98,26 @@ export async function generateReportCardPDF(
     console.log("Pointy mountains image not loaded");
   }
 
+  // Add skier logo on top of mountains (PNG for transparency)
+  try {
+    const skierLogoBase64 = await loadSkierLogoAsBase64();
+    if (skierLogoBase64) {
+      const skierSize = 120;
+      const centerX = (pageWidth - skierSize) / 1.2;
+      const centerY = thirdPage - 80;
+      doc.addImage(
+        skierLogoBase64,
+        "PNG",
+        centerX,
+        centerY,
+        skierSize,
+        skierSize,
+      );
+    }
+  } catch (_e) {
+    console.log("Skier logo image not loaded");
+  }
+
   // Add logo on top left
   const logoBase64 = await loadLogoAsBase64();
   if (logoBase64) {
@@ -106,20 +128,31 @@ export async function generateReportCardPDF(
     }
   }
 
+  // Brand color
+  const brandBlue: [number, number, number] = [0, 0, 0];
+  const darkGray: [number, number, number] = [50, 50, 50];
+  const black: [number, number, number] = [0, 0, 0];
+
   // Right side - Congratulations message (after logo)
   const rightX = margin + 60;
-  doc.setFontSize(26);
-  doc.setFont("helvetica", "bold");
+  doc.setFontSize(30);
+  doc.setFont("Montserrat", "bold");
+  doc.setTextColor(...brandBlue);
   doc.text("CONGRATULATIONS!", rightX, 30);
 
   // Athlete, Coach, Season and Group Name (middle of top third)
   const topThirdMiddle = thirdPage / 2 + 16;
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setFont("Montserrat", "bold");
+  doc.setTextColor(...brandBlue);
   doc.text("ATHLETE PROGRESS REPORT", margin, topThirdMiddle - 8);
-  doc.setFontSize(11);
+  doc.setFontSize(12);
+  doc.setFont("Montserrat", "bold");
+  doc.setTextColor(...black);
   doc.text(`Athlete: ${athlete.full_name}`, margin, topThirdMiddle);
   doc.setFontSize(10);
+  doc.setFont("Montserrat", "normal");
+  doc.setTextColor(...darkGray);
   doc.text(`Coach: ${coachName}`, margin, topThirdMiddle + 8);
   doc.text(
     `Group: ${groupName || athlete.group_name || "N/A"}`,
@@ -134,36 +167,18 @@ export async function generateReportCardPDF(
 
   let currentY = thirdPage + 5;
 
-  // Add skier logo in middle section background - larger and centered
-  try {
-    const skierLogoBase64 = await loadSkierLogoAsBase64();
-    if (skierLogoBase64) {
-      const skierSize = 120;
-      const centerX = (pageWidth - skierSize) / 1.2;
-      const centerY = thirdPage + -80;
-      doc.addImage(
-        skierLogoBase64,
-        "JPEG",
-        centerX,
-        centerY,
-        skierSize,
-        skierSize,
-      );
-    }
-  } catch (_e) {
-    console.log("Skier logo image not loaded");
-  }
-
   // Athlete's Skills and Progressions header - under the mountain/skier image
   currentY += 32;
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setFont("Montserrat", "bold");
+  doc.setTextColor(...brandBlue);
   doc.text("Athlete's Skills and Progressions", leftX, currentY);
   currentY += lineHeight + 1;
 
   // Legend
   doc.setFontSize(6);
-  doc.setFont("helvetica", "italic");
+  doc.setFont("Montserrat", "italic");
+  doc.setTextColor(...darkGray);
   doc.text("1- Area of Focus | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Mastered!", leftX, currentY);
   currentY += lineHeight + 3;
 
@@ -225,18 +240,21 @@ export async function generateReportCardPDF(
     const skills = groupedSkills[category] || [];
 
     // Category name on the left
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setFont("Montserrat", "bold");
+    doc.setTextColor(...brandBlue);
     doc.text(`${category}:`, categoryColX, currentRowY);
 
     // Scores inline on the right - with line wrapping for long categories
     if (skills.length === 0) {
       doc.setFontSize(8);
-      doc.setFont("helvetica", "italic");
+      doc.setFont("Montserrat", "italic");
+      doc.setTextColor(...darkGray);
       doc.text("No skills evaluated", scoresColX, currentRowY);
     } else {
       doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("Montserrat", "normal");
+      doc.setTextColor(...black);
       // Spread skills across the line with tight spacing and wrap if needed
       let skillX = scoresColX;
       let skillY = currentRowY;
@@ -312,8 +330,9 @@ export async function generateReportCardPDF(
     let bottomY = thirdPage * 2 + 35;
 
     // What's Next? header
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setFont("Montserrat", "bold");
+    doc.setTextColor(...brandBlue);
     doc.text("What's Next?", leftX, bottomY);
     bottomY += lineHeight + 2;
 
@@ -324,17 +343,20 @@ export async function generateReportCardPDF(
 
       // Suggested Training on the left
       if (selectedTraining.length > 0) {
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setFont("Montserrat", "bold");
+        doc.setTextColor(...darkGray);
         doc.text("Suggested Training:", leftX, bottomY);
         const trainingHeadingWidth = doc.getTextWidth("Suggested Training:  ");
-        doc.setFont("helvetica", "normal");
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...black);
         const firstTraining = selectedTraining[0].skill_name.replace(/^Suggested Training:\s*/i, "");
         doc.text(firstTraining, leftX + trainingHeadingWidth, bottomY);
 
         // Remaining items underneath
         if (selectedTraining.length > 1) {
-          doc.setFontSize(8);
+          doc.setFontSize(9);
+          doc.setFont("Montserrat", "normal");
           selectedTraining.slice(1).forEach((skill) => {
             bottomY += lineHeight - 1;
             const displayName = skill.skill_name.replace(/^Suggested Training:\s*/i, "");
@@ -347,17 +369,20 @@ export async function generateReportCardPDF(
       // Recommended Programs on the right
       let programsY = sectionStartY;
       if (selectedPrograms.length > 0) {
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setFont("Montserrat", "bold");
+        doc.setTextColor(...darkGray);
         doc.text("Recommended Programs:", rightColX, programsY);
         const programsHeadingWidth = doc.getTextWidth("Recommended Programs:  ");
-        doc.setFont("helvetica", "normal");
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...black);
         const firstProgram = selectedPrograms[0].skill_name.replace(/^Programs for Next Season:\s*/i, "");
         doc.text(firstProgram, rightColX + programsHeadingWidth, programsY);
 
         // Remaining items underneath
         if (selectedPrograms.length > 1) {
-          doc.setFontSize(8);
+          doc.setFontSize(9);
+          doc.setFont("Montserrat", "normal");
           selectedPrograms.slice(1).forEach((skill) => {
             programsY += lineHeight - 1;
             const displayName = skill.skill_name.replace(/^Programs for Next Season:\s*/i, "");
@@ -373,22 +398,25 @@ export async function generateReportCardPDF(
 
     // Goals underneath Training and Programs
     if (hasGoals) {
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("Goals for next season", leftX, bottomY);
+      doc.setFontSize(14);
+      doc.setFont("Montserrat", "bold");
+      doc.setTextColor(...brandBlue);
+      doc.text("Goals for Next Season", leftX, bottomY);
       bottomY += lineHeight + 1;
 
       // Comments/goals text
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
+      doc.setFont("Montserrat", "normal");
+      doc.setTextColor(...darkGray);
+      doc.setFontSize(8);
       const splitComments = doc.splitTextToSize(notes, pageWidth - margin * 2);
       doc.text(splitComments, leftX, bottomY);
     }
   }
 
   // "See you next season!" at bottom of page
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setFont("Montserrat", "bold");
+  doc.setTextColor(...brandBlue);
   doc.text("See you next season!", pageWidth / 2, pageHeight - 15, {
     align: "center",
   });
@@ -398,14 +426,25 @@ export async function generateReportCardPDF(
 }
 
 async function loadSkierLogoAsBase64(): Promise<string | null> {
-  // Background image, can be lower quality - 1080x1080 original
-  return compressImage("/skierlogo.png", 400, 400, 0.6, true);
+  // Keep as PNG to preserve transparency - no white fill
+  try {
+    const response = await fetch('/skierlogo.png');
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch (_e) {
+    return null;
+  }
 }
 
 async function loadPointyAsBase64(): Promise<string | null> {
   // Background mountains - 2480x3508 original, way too large
   // Scale down to 800x400 max for PDF use
-  return compressImage("/biggermountains.png", 800, 400, 0.6, true);
+  return compressImage("/biggermountains.png", 1600, 1000, 0.8, true);
 }
 
 export async function downloadReportCardPDF(
