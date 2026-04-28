@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { Athlete, Skill, TemplateCategory } from '../types'
@@ -6,6 +6,8 @@ import type { Athlete, Skill, TemplateCategory } from '../types'
 import { defaultTemplates } from '../data/defaultTemplates'
 import AthleteCard from '../components/roster/AthleteCard'
 import SkillEvaluator from '../components/evaluation/SkillEvaluator'
+import MediaGallery from '../components/media/MediaGallery'
+import { uploadAthleteMedia } from '../lib/media'
 import { useNavigate } from 'react-router-dom'
 
 interface MetricsSet {
@@ -27,6 +29,9 @@ export default function Roster() {
   const [selectedMetricsSet, setSelectedMetricsSet] = useState<MetricsSet | null>(null)
   const [loading, setLoading] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | 'all' | null>(null)
+  const [showMediaModal, setShowMediaModal] = useState(false)
+  const [mediaAthlete, setMediaAthlete] = useState<Athlete | null>(null)
+  const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
   
   // Filters
   const [filterCoach, setFilterCoach] = useState<string>('')
@@ -98,7 +103,8 @@ export default function Roster() {
   async function handleSaveEvaluation(
     scores: { skill_id: string; skill_name: string; score: number | string | null }[], 
     notes: string,
-    groupName: string
+    groupName: string,
+    categoryNotes?: Record<string, string>
   ) {
     if (!coach || !selectedAthlete) return
 
@@ -107,7 +113,8 @@ export default function Roster() {
       coach_id: coach.id,
       skill_scores: scores,
       notes,
-      group_name: groupName || null
+      group_name: groupName || null,
+      category_notes: categoryNotes || null
     }
 
     const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
@@ -180,20 +187,32 @@ export default function Roster() {
     setShowDeleteConfirm(null)
   }
 
-  async function deleteAllAthletes() {
-    if (!coach) return
-    
-    // Remove all from coach_athletes
-    const { error } = await supabase
-      .from('coach_athletes')
-      .delete()
-      .eq('coach_id', coach.id)
-
-    if (!error) {
-      setAthletes([])
+  // Handle media upload from roster modal
+  const handleUploadMedia = useCallback(async (file: File) => {
+    if (!coach || !mediaAthlete) {
+      alert('Cannot upload media: missing coach or athlete information')
+      return
     }
-    setShowDeleteConfirm(null)
-  }
+    
+    const result = await uploadAthleteMedia(
+      mediaAthlete.id,
+      mediaAthlete.full_name,
+      file,
+      {
+        coachId: coach.id,
+        description: `Uploaded from roster - ${mediaAthlete.full_name}`,
+        tags: [mediaAthlete.full_name, 'roster']
+      }
+    )
+    
+    if (result.error) {
+      alert('Failed to upload media: ' + result.error)
+    } else {
+      console.log('Media uploaded successfully:', result.url)
+      // Refresh the media gallery
+      setMediaRefreshKey(prev => prev + 1)
+    }
+  }, [mediaAthlete, coach])
 
 
   // Compute unique filter values (from all athletes or just my roster)
@@ -221,22 +240,12 @@ export default function Roster() {
     <div className="p-2 sm:p-4 lg:p-8 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="py-4 sm:py-6">
-          {/* Coach Instructions Panel */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">How to Use This App</h3>
-            <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-              <li>Add the athletes you have coached to your roster from the &quot;All Athletes&quot; tab</li>
-              <li>Evaluate them on their performance using the built-in metrics</li>
-              <li>Save evaluations to be sent out as report cards for parents to see</li>
-            </ul>
-          </div>
-
           {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {viewMode === 'my roster' ? 'My Roster' : 'All Athletes'}
-              </h2>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              {viewMode === 'my roster' ? 'My Roster' : 'All Athletes'}
+            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               {/* View Mode Toggle */}
               <div className="flex bg-gray-100 rounded-lg p-1">
                 <button
@@ -260,20 +269,11 @@ export default function Roster() {
                   All Athletes ({athletes.length})
                 </button>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">
-                {filteredAthletes.length} athletes
-              </span>
-              {/* Only show Clear All for admins */}
-              {coach?.is_admin && viewMode === 'my roster' && myRosterIds.size > 0 && (
-                <button 
-                  onClick={() => setShowDeleteConfirm('all')}
-                  className="py-2 px-4 border border-red-300 text-red-600 rounded hover:bg-red-50"
-                >
-                  Clear All
-                </button>
-              )}
+              <div className="flex items-center">
+                <span className="text-sm text-gray-500">
+                  {filteredAthletes.length} athletes
+                </span>
+              </div>
             </div>
           </div>
 
@@ -354,6 +354,10 @@ export default function Roster() {
                         setShowMetricsSelector(true)
                       }}
                       onDelete={viewMode === 'my roster' ? () => setShowDeleteConfirm(athlete.id) : undefined}
+                      onViewMedia={() => {
+                        setMediaAthlete(athlete)
+                        setShowMediaModal(true)
+                      }}
                     />
                     {/* Add/Remove button for All Athletes view */}
                     {viewMode === 'all athletes' && (
@@ -372,7 +376,7 @@ export default function Roster() {
                             : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                         }`}
                       >
-                        {isInMyRoster ? '✓ Added' : '+ Add'}
+                        {isInMyRoster ? <><svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Added</> : <><svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Add</>}
                       </button>
                     )}
                     {evalCount > 0 && (
@@ -432,7 +436,7 @@ export default function Roster() {
                 >
                   <h3 className="font-medium text-gray-900">{metricsSet.name}</h3>
                   <p className="text-sm text-gray-500">
-                    {metricsSet.skills?.length || 0} metrics • {metricsSet.categories?.length || 0} categories
+                    {metricsSet.skills?.length || 0} metrics <span className="mx-1 text-gray-400">·</span> {metricsSet.categories?.length || 0} categories
                   </p>
                 </button>
               ))}
@@ -478,17 +482,66 @@ export default function Roster() {
         </div>
       )}
 
+      {/* Media Modal */}
+      {showMediaModal && mediaAthlete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="w-full sm:max-w-4xl bg-white rounded-t-lg sm:rounded-lg shadow-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
+              <h2 className="text-xl font-bold text-gray-900">
+                {mediaAthlete.full_name} - Media
+              </h2>
+              <button
+                onClick={() => {
+                  setShowMediaModal(false)
+                  setMediaAthlete(null)
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              {/* Upload Button */}
+              <div className="mb-4 flex items-center space-x-3">
+                <span className="text-sm text-gray-500">Add Media:</span>
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input')
+                    input.type = 'file'
+                    input.accept = 'image/*,video/*'
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0]
+                      if (file) {
+                        handleUploadMedia(file)
+                      }
+                    }
+                    input.click()
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Upload Photo/Video</span>
+                </button>
+              </div>
+              <MediaGallery key={mediaRefreshKey} athleteId={mediaAthlete.id} isCoach={true} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {showDeleteConfirm === 'all' ? 'Clear All Athletes?' : 'Delete Athlete?'}
+              Remove Athlete?
             </h3>
             <p className="text-sm text-gray-500 mb-6">
-              {showDeleteConfirm === 'all' 
-                ? `This will permanently delete all ${athletes.length} athletes from your roster.` 
-                : 'This will permanently delete this athlete from your roster.'}
+              This will remove this athlete from your roster.
             </p>
             <div className="flex space-x-3">
               <button
@@ -499,11 +552,7 @@ export default function Roster() {
               </button>
               <button
                 onClick={() => {
-                  if (showDeleteConfirm === 'all') {
-                    deleteAllAthletes()
-                  } else {
-                    removeFromMyRoster(showDeleteConfirm)
-                  }
+                  removeFromMyRoster(showDeleteConfirm)
                 }}
                 className="flex-1 py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700"
               >

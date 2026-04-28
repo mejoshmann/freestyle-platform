@@ -113,19 +113,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-3 sm:p-4 lg:p-8">
       {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+      <div className="mb-4 sm:mb-8 border-l-4 border-freestyle-red pl-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Welcome Back{coach?.full_name ? `, ${coach.full_name}` : ''}
         </h1>
         <p className="text-gray-500 mt-2">Manage your athletes and evaluations</p>
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="mb-4 sm:mb-8">
+        <h2 className="text-lg font-medium text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
           <DashboardCard
             title="My Roster"
             description="View athletes and start evaluations"
@@ -140,24 +140,24 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Overview */}
-      <div className="mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow">
+      <div className="mb-4 sm:mb-8">
+        <h2 className="text-lg font-medium text-gray-900 mb-3 sm:mb-4">Overview</h2>
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
+          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow border-t-4 border-freestyle-red">
             <p className="text-sm text-gray-500">My Athletes</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">
+            <p className="text-2xl sm:text-3xl font-bold text-blue-600 mt-1 sm:mt-2">
               {loading ? '--' : stats.myAthletes}
             </p>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow border-t-4 border-green-500">
             <p className="text-sm text-gray-500">Evaluations Today</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">
+            <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">
               {loading ? '--' : stats.evaluationsToday}
             </p>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow border-t-4 border-gray-400">
             <p className="text-sm text-gray-500">Total Evaluations</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
               {loading ? '--' : stats.totalEvaluations}
             </p>
           </div>
@@ -167,7 +167,7 @@ export default function Dashboard() {
       {/* Recent Activity */}
       <div>
         <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-lg shadow border-l-4 border-freestyle-red">
           {loading ? (
             <div className="p-6 text-center">
               <p className="text-gray-500">Loading...</p>

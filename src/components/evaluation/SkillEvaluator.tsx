@@ -35,7 +35,7 @@ interface SkillEvaluatorProps {
   athleteName: string
   skills: Skill[]
   categories?: TemplateCategory[]
-  onSave: (scores: SkillScore[], notes: string, groupName: string, voiceNotes?: string[]) => void
+  onSave: (scores: SkillScore[], notes: string, groupName: string, categoryNotes?: Record<string, string>, voiceNotes?: string[]) => void
   onCancel: () => void
   onBackToRoster?: () => void
 }
@@ -55,11 +55,12 @@ export default function SkillEvaluator({
     skills.map(skill => ({
       skill_id: skill.id,
       skill_name: skill.name,
-      score: isToggleSkill(skill) ? null : 3  // Toggle skills default to null, regular skills default to 3
+      score: isToggleSkill(skill) ? null : 0  // Toggle skills default to null, regular skills default to 0
     }))
   )
   const [notes, setNotes] = useState('')
   const [groupName, setGroupName] = useState('')
+  const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
 
   // Computed values
   const evaluatedCount = scores.filter(s => s.score !== null).length
@@ -72,10 +73,14 @@ export default function SkillEvaluator({
     ))
   }, [])
 
+  const handleCategoryNoteChange = useCallback((category: string, note: string) => {
+    setCategoryNotes(prev => ({ ...prev, [category]: note }))
+  }, [])
+
   const handleSave = useCallback(() => {
     const evaluatedScores = scores.filter(s => s.score !== null)
-    onSave(evaluatedScores, notes, groupName)
-  }, [scores, notes, groupName, onSave])
+    onSave(evaluatedScores, notes, groupName, categoryNotes)
+  }, [scores, notes, groupName, categoryNotes, onSave])
 
 
 
@@ -92,6 +97,31 @@ export default function SkillEvaluator({
       {
         coachId: coach.id,
         description: `Captured during evaluation - ${athleteName}`,
+        tags: [athleteName, 'evaluation']
+      }
+    )
+    
+    if (result.error) {
+      alert('Failed to upload media: ' + result.error)
+    } else {
+      console.log('Media uploaded successfully:', result.url)
+    }
+  }, [athleteId, athleteName, coach])
+
+  // Upload handler - same as capture but for gallery uploads
+  const handleUploadMedia = useCallback(async (file: File) => {
+    if (!coach || !athleteId) {
+      alert('Cannot upload media: missing coach or athlete information')
+      return
+    }
+    
+    const result = await uploadAthleteMedia(
+      athleteId,
+      athleteName,
+      file,
+      {
+        coachId: coach.id,
+        description: `Uploaded during evaluation - ${athleteName}`,
         tags: [athleteName, 'evaluation']
       }
     )
@@ -142,6 +172,8 @@ export default function SkillEvaluator({
         categories={categories}
         scores={scores}
         onScoreChange={updateScore}
+        categoryNotes={categoryNotes}
+        onCategoryNoteChange={handleCategoryNoteChange}
       />
 
       {/* Notes */}
@@ -159,12 +191,18 @@ export default function SkillEvaluator({
       </div>
 
       {/* Desktop Actions */}
-      <DesktopActions onSave={handleSave} onCancel={onCancel} />
+      <DesktopActions 
+        onSave={handleSave} 
+        onCancel={onCancel} 
+        onCaptureMedia={handleCaptureMedia}
+        onUploadMedia={handleUploadMedia}
+      />
 
       {/* Mobile Bottom Navigation */}
       <MobileEvalNav
         onBackToRoster={handleBackToRoster}
         onCaptureMedia={handleCaptureMedia}
+        onUploadMedia={handleUploadMedia}
         onSave={handleSave}
       />
     </div>

@@ -70,14 +70,14 @@ export default function Login() {
       <div className="flex flex-col items-center mb-4">
         <img 
           src="/logo.png" 
-          alt="Freestyle Vancouver" 
+          alt="Freestyle Coach Platform" 
           className="h-30 w-auto mb-1"
         />
         <h1 className="text-2xl font-bold text-gray-900">Freestyle Athlete Evaluation</h1>
       </div>
       
       {/* Auth Card - No grey background */}
-      <div className="w-full max-w-md space-y-6 p-6 bg-white rounded-lg shadow">
+      <div className="w-full max-w-md space-y-6 p-6 bg-white rounded-lg shadow border-t-4 border-freestyle-red">
         <h2 className="text-3xl font-bold text-center">{getTitle()}</h2>
         {mode === 'signUp' ? (
           <SignUpForm onSubmit={handleSignUp} error={error} />

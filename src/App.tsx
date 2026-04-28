@@ -9,6 +9,7 @@ import Evaluations from './pages/Evaluations'
 import AdminPanel from './pages/AdminPanel'
 import AddAthletes from './pages/AddAthletes'
 import ImportAthletes from './pages/ImportAthletes'
+import Settings from './pages/Settings'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import './App.css'
 
@@ -35,6 +36,7 @@ function AppContent() {
               <Route path="/evaluations/:athleteId" element={<Evaluations />} />
               <Route path="/add-athletes" element={<AddAthletes />} />
               <Route path="/import-athletes" element={<ImportAthletes />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

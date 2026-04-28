@@ -68,17 +68,17 @@ export default function ImportAthletes() {
               
               <div className="mt-4 pt-4 border-t border-blue-200">
                 <h4 className="font-medium text-blue-900 mb-2">Supported Columns</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
-                  <div>• First Name / Last Name</div>
-                  <div>• Sex / Gender</div>
-                  <div>• DOB / Date of Birth</div>
-                  <div>• Age</div>
-                  <div>• Category (Mountain/Day/Class)</div>
-                  <div>• Mobile Number #1 / #2</div>
-                  <div>• Allergies/Medications</div>
-                  <div>• Medical Conditions</div>
-                  <div className="col-span-2">• Attendance dates (X = present)</div>
-                </div>
+                <ul className="grid grid-cols-2 gap-2 text-sm text-blue-800">
+                  <li className="list-disc ml-4">First Name / Last Name</li>
+                  <li className="list-disc ml-4">Sex / Gender</li>
+                  <li className="list-disc ml-4">DOB / Date of Birth</li>
+                  <li className="list-disc ml-4">Age</li>
+                  <li className="list-disc ml-4">Category (Mountain/Day/Class)</li>
+                  <li className="list-disc ml-4">Mobile Number #1 / #2</li>
+                  <li className="list-disc ml-4">Allergies/Medications</li>
+                  <li className="list-disc ml-4">Medical Conditions</li>
+                  <li className="list-disc ml-4 col-span-2">Attendance dates (X = present)</li>
+                </ul>
               </div>
             </div>
 
@@ -100,7 +100,7 @@ export default function ImportAthletes() {
                 }}
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
-                Download Template CSV →
+                Download Template CSV <svg className="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </button>
             </div>
           </div>

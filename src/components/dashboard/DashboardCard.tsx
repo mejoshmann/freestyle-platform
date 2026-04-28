@@ -8,7 +8,7 @@ export default function DashboardCard({ title, description, onClick }: Dashboard
   return (
     <div 
       onClick={onClick}
-      className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+      className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-xl transition-shadow border-l-4 border-freestyle-red"
     >
       <div className="p-5">
         <h3 className="text-lg font-medium text-gray-900">{title}</h3>

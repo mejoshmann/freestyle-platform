@@ -8,10 +8,32 @@ export interface TemplateDefinition {
 
 export const defaultTemplates: TemplateDefinition[] = [
   {
-    name: 'Effort & Participation',
-    description: 'Overall effort and participation evaluation',
+    name: 'Attendance',
+    description: 'Athlete attendance tracking',
     skills: [
-      { id: 'effort-participation', name: 'Effort & Participation', description: 'Overall effort and participation in training' },
+      { id: 'attendance', name: 'Attendance', description: 'Number of sessions attended' },
+    ],
+  },
+  {
+    name: 'Athlete Participation',
+    description: 'Overall athlete participation evaluation',
+    skills: [
+      { id: 'effort-participation', name: 'Attitude & Engagement', description: 'Overall attitude and engagement in training' },
+    ],
+  },
+  {
+    name: 'Freeskiing',
+    description: 'Freeskiing evaluation',
+    skills: [
+      { id: 'freeski-stance-balance', name: 'Stance & Balance', description: 'Body position and overall balance on skis' },
+      { id: 'freeski-steering-edging', name: 'Steering & Edging', description: 'Steering and edge control technique' },
+      { id: 'freeski-pressure-absorption', name: 'Pressure Control / Absorption', description: 'Pressure management, control and absorption technique' },
+      { id: 'freeski-timing-coordination', name: 'Timing & Coordination', description: 'Timing and coordination of movements' },
+      { id: 'freeski-freeride-style', name: 'Freeride Style / Impression', description: 'Overall freeride style and impression' },
+      { id: 'freeski-switch', name: 'Switch Skiing', description: 'Ability to ski switch (backwards)' },
+      { id: 'freeski-switch-stops', name: 'Controlled Stops', description: 'Controlled stops while skiing switch' },
+      { id: 'freeski-spinning', name: 'Spinning on Snow', description: '360s and spins on flat snow' },
+      { id: 'freeski-control', name: 'Skiing with Control', description: 'Overall control and style' },
     ],
   },
   {
@@ -24,25 +46,13 @@ export const defaultTemplates: TemplateDefinition[] = [
     ],
   },
   {
-    name: 'Jumping',
+    name: 'Air Skills',
     description: 'Jumping skiing evaluation',
     skills: [
       { id: 'bigair-takeoff', name: 'Take Off', description: 'Quality of jump takeoff' },
       { id: 'bigair-extension', name: 'Extension', description: 'Body extension in the air' },
       { id: 'bigair-amplitude', name: 'Amplitude', description: 'Height and distance achieved' },
       { id: 'bigair-landing', name: 'Landing', description: 'Landing stability and control' },
-    ],
-  },
-  {
-    name: 'Freeskiing',
-    description: 'Freeskiing evaluation',
-    skills: [
-      { id: 'freeski-balance', name: 'Balance', description: 'Overall balance on skis' },
-      { id: 'freeski-switch', name: 'Switch Skiing', description: 'Ability to ski switch (backwards)' },
-      { id: 'freeski-switch-stops', name: 'Controlled Stops', description: 'Controlled stops while skiing switch' },
-      { id: 'freeski-turn-shape', name: 'Turn Shape / Carving', description: 'Linked turns while skiing switch' },
-      { id: 'freeski-spinning', name: 'Spinning on Snow', description: '360s and spins on flat snow' },
-      { id: 'freeski-control', name: 'Skiing with Control', description: 'Overall control and style' },
     ],
   },
   {

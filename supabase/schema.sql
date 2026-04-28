@@ -189,6 +189,7 @@ create table if not exists evaluations (
   skill_scores jsonb not null default '[]',
   notes text,
   group_name text,  -- Custom group name given by athletes (e.g., "Snow Riders", "Mountain Hawks")
+  category_notes jsonb default '{}'::jsonb,
   evaluated_at timestamp with time zone default timezone('utc'::text, now()) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -239,14 +240,31 @@ create table if not exists athlete_photos (
 -- Enable RLS on athlete_photos
 alter table athlete_photos enable row level security;
 
--- Coaches can manage their own photos
-create policy "Coaches can manage their photos"
-  on athlete_photos for all
+-- All authenticated coaches can view any athlete's photos
+create policy "All coaches can view photos"
+  on athlete_photos for select
+  to authenticated
+  using (true);
+
+-- Coaches can only insert/update/delete their own photos
+create policy "Coaches can manage their own photos"
+  on athlete_photos for insert
+  to authenticated
+  with check (auth.uid() = coach_id);
+
+create policy "Coaches can update their own photos"
+  on athlete_photos for update
+  to authenticated
   using (auth.uid() = coach_id);
 
--- Admins can read all photos
-create policy "Admins can read all photos"
-  on athlete_photos for select
+create policy "Coaches can delete their own photos"
+  on athlete_photos for delete
+  to authenticated
+  using (auth.uid() = coach_id);
+
+-- Admins can manage all photos
+create policy "Admins can manage all photos"
+  on athlete_photos for all
   to authenticated
   using (
     exists (
@@ -270,14 +288,31 @@ create table if not exists athlete_videos (
 -- Enable RLS on athlete_videos
 alter table athlete_videos enable row level security;
 
--- Coaches can manage their own videos
-create policy "Coaches can manage their videos"
-  on athlete_videos for all
+-- All authenticated coaches can view any athlete's videos
+create policy "All coaches can view videos"
+  on athlete_videos for select
+  to authenticated
+  using (true);
+
+-- Coaches can only insert/update/delete their own videos
+create policy "Coaches can manage their own videos"
+  on athlete_videos for insert
+  to authenticated
+  with check (auth.uid() = coach_id);
+
+create policy "Coaches can update their own videos"
+  on athlete_videos for update
+  to authenticated
   using (auth.uid() = coach_id);
 
--- Admins can read all videos
-create policy "Admins can read all videos"
-  on athlete_videos for select
+create policy "Coaches can delete their own videos"
+  on athlete_videos for delete
+  to authenticated
+  using (auth.uid() = coach_id);
+
+-- Admins can manage all videos
+create policy "Admins can manage all videos"
+  on athlete_videos for all
   to authenticated
   using (
     exists (

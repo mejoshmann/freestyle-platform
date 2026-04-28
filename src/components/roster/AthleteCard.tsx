@@ -8,9 +8,10 @@ interface AthleteCardProps {
   }[]
   onClick: () => void
   onDelete?: () => void
+  onViewMedia?: () => void
 }
 
-export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete }: AthleteCardProps) {
+export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete, onViewMedia }: AthleteCardProps) {
   return (
     <div 
       className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden active:bg-gray-50 group"
@@ -49,6 +50,20 @@ export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete }
           </div>
         </div>
         <div className="ml-2 flex items-center space-x-1">
+          {onViewMedia && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onViewMedia()
+              }}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              title="View media"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          )}
           {onDelete && (
             <button
               onClick={(e) => {

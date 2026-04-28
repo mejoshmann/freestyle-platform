@@ -64,6 +64,8 @@ export interface Evaluation {
   notes?: string
   voice_notes?: string[]
   transcribed_notes?: string
+  category_notes?: Record<string, string>
+  group_name?: string
   evaluated_at: string
 }
 

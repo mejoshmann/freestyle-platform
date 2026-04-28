@@ -565,12 +565,12 @@ export default function CSVImport({ onImportComplete, onCancel }: CSVImportProps
 
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <h3 className="font-medium text-gray-900 mb-2">Common Fixes:</h3>
-          <ul className="text-sm text-gray-600 space-y-1">
-            <li>• Make sure you're logged in</li>
-            <li>• Check that athlete names are not empty</li>
-            <li>• If you see "column does not exist", the database schema needs updating</li>
-            <li>• Try importing fewer athletes at once</li>
-            <li>• Check browser console for more details (F12)</li>
+          <ul className="text-sm text-gray-600 space-y-1 list-disc ml-4">
+            <li>Make sure you're logged in</li>
+            <li>Check that athlete names are not empty</li>
+            <li>If you see "column does not exist", the database schema needs updating</li>
+            <li>Try importing fewer athletes at once</li>
+            <li>Check browser console for more details (F12)</li>
           </ul>
         </div>
 

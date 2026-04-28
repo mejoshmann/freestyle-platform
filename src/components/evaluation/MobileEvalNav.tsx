@@ -1,16 +1,17 @@
-import MediaCapture from './MediaCapture'
+import { MediaCaptureButton, MediaUploadButton } from './MediaCapture'
 
 interface MobileEvalNavProps {
   onBackToRoster: () => void
   onCaptureMedia: (file: File) => void
+  onUploadMedia: (file: File) => void
   onSave: () => void
 }
 
-export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onSave }: MobileEvalNavProps) {
+export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onUploadMedia, onSave }: MobileEvalNavProps) {
   return (
     <>
       {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 pb-safe z-50 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 pb-safe z-50 lg:hidden">
         <div className="flex items-center justify-around">
           {/* Back to Roster */}
           <button
@@ -23,8 +24,11 @@ export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onSave }
             <span className="text-xs mt-1">Roster</span>
           </button>
 
-          {/* Capture Media */}
-          <MediaCapture onCapture={onCaptureMedia} />
+          {/* Capture Media - Camera */}
+          <MediaCaptureButton onCapture={onCaptureMedia} />
+
+          {/* Upload Media - Gallery */}
+          <MediaUploadButton onCapture={onUploadMedia} />
 
           {/* Save Evaluation */}
           <button

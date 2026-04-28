@@ -7,17 +7,21 @@ interface SkillsListProps {
   categories?: TemplateCategory[]
   scores: SkillScore[]
   onScoreChange: (skillId: string, value: number | string | null) => void
+  categoryNotes: Record<string, string>
+  onCategoryNoteChange: (category: string, note: string) => void
 }
 
-export default function SkillsList({ skills, categories, scores, onScoreChange }: SkillsListProps) {
+export default function SkillsList({ skills, categories, scores, onScoreChange, categoryNotes, onCategoryNoteChange }: SkillsListProps) {
   // Derive categories from skill IDs if not provided
   const derivedCategories = useMemo(() => {
     if (categories && categories.length > 0) return categories
     
     // Map prefixes to display names
     const prefixToName: Record<string, string> = {
+      'effort': 'Athlete Participation',
+      'attendance': 'Attendance',
       'moguls': 'Moguls',
-      'bigair': 'Jumping',
+      'bigair': 'Air Skills',
       'jump': 'Air Tricks',
       'freeski': 'Freeskiing',
       'park': 'Terrain Park',
@@ -59,6 +63,15 @@ export default function SkillsList({ skills, categories, scores, onScoreChange }
               )
             })}
           </div>
+          {category.name !== 'Suggested Training' && category.name !== 'Programs for Next Season' && (
+            <textarea
+              value={categoryNotes[category.name] || ''}
+              onChange={(e) => onCategoryNoteChange(category.name, e.target.value)}
+              placeholder={`Notes for ${category.name}...`}
+              rows={2}
+              className="w-full mt-2 p-2 text-sm border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          )}
         </div>
       ))}
     </div>

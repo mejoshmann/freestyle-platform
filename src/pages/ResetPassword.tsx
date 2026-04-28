@@ -76,7 +76,7 @@ export default function ResetPassword() {
       <div className="flex flex-col items-center mb-4">
         <img 
           src="/logo.png" 
-          alt="Freestyle Vancouver" 
+          alt="Freestyle Coach Platform" 
           className="h-30 w-auto mb-1"
         />
         <h1 className="text-2xl font-bold text-gray-900">Freestyle Athlete Evaluation</h1>

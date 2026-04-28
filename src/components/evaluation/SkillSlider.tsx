@@ -41,7 +41,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
       onChange(value === "Recommended" ? null : "Recommended")
     } else {
       // Regular skip/enable
-      onChange(isSkipped ? 3 : null)
+      onChange(isSkipped ? 0 : null)
     }
   }
 
@@ -62,7 +62,8 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
                 : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
             }`}
           >
-            {isYes ? '✓ Yes' : 'Yes'}
+            {isYes && <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+            Yes
           </button>
         </div>
         {skill.description && (
@@ -89,7 +90,8 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
                 : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
             }`}
           >
-            {isRecommended ? '✓ Recommended' : 'Recommended'}
+            {isRecommended && <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+            Recommended
           </button>
         </div>
         {skill.description && (
@@ -99,7 +101,10 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
     )
   }
 
-  // Regular 1-4 slider for other skills
+  const isAttendance = skillIdLower === 'attendance' || skillIdLower.startsWith('attendance-')
+  const isAttitudeEngagement = skillIdLower === 'effort-participation'
+
+  // Regular 0-4 slider for other skills
   return (
     <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
       <div className="flex justify-between items-center mb-2">
@@ -111,7 +116,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             {displayValue}
           </span>
           <button
-            onClick={() => onChange(isSkipped ? 3 : null)}
+            onClick={() => onChange(isSkipped ? 0 : null)}
             className={`text-xs px-2 py-1 rounded ${
               isSkipped 
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
@@ -130,7 +135,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
         <>
           <input
             type="range"
-            min={1}
+            min={0}
             max={4}
             step={1}
             value={value}
@@ -139,14 +144,18 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             style={{ touchAction: 'manipulation' }}
           />
           <div className="flex justify-between text-xs text-gray-400 mt-2 sm:mt-1 px-1">
+            <span>0</span>
             <span>1</span>
             <span>2</span>
             <span>3</span>
             <span>4</span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span className="text-left">Tried it</span>
-            <span className="text-right">Stomped it</span>
+            <span className="text-left">{isAttendance || isAttitudeEngagement ? 'N/A' : 'No Attempt'}</span>
+            <span className="text-left">{isAttendance || isAttitudeEngagement ? '' : 'Tried it'}</span>
+            <span></span>
+            <span></span>
+            <span className="text-right">{isAttendance ? '100%' : isAttitudeEngagement ? 'Stoked' : 'Stomped it'}</span>
           </div>
         </>
       )}

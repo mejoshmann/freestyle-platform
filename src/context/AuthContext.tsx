@@ -4,6 +4,7 @@ import type { Coach } from '../types'
 
 interface AuthContextType {
   coach: Coach | null
+  setCoach: (coach: Coach | null) => void
   signUp: (email: string, password: string, fullName: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -33,6 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
+  }, [])
+
+  // Keep Supabase active — ping every 4 days to prevent free-tier pausing
+  useEffect(() => {
+    const FOUR_DAYS = 4 * 24 * 60 * 60 * 1000
+    const keepAlive = () => {
+      supabase.from('coaches').select('id', { count: 'exact', head: true }).then(() => {
+        console.log('Supabase keep-alive ping sent')
+      })
+    }
+    keepAlive()
+    const interval = setInterval(keepAlive, FOUR_DAYS)
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchCoach(userId: string, email?: string, fullName?: string) {
@@ -144,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ coach, signUp, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ coach, setCoach, signUp, signIn, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   )

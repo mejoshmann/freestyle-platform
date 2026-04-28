@@ -24,11 +24,16 @@ async function compressImage(
   maxHeight: number,
   quality: number = 0.7,
   fillWhite: boolean = false,
+  opacity: number = 1.0,
 ): Promise<string | null> {
   try {
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error(`Image fetch failed: ${url} (${response.status})`);
+      return null;
+    }
     const blob = await response.blob();
+    console.log(`Image fetched: ${url} (${blob.size} bytes, ${blob.type})`);
 
     return new Promise((resolve) => {
       const img = new Image();
@@ -56,20 +61,33 @@ async function compressImage(
           ctx.fillRect(0, 0, width, height);
         }
 
+        // Apply opacity if less than 1
+        if (opacity < 1.0) {
+          ctx.globalAlpha = opacity;
+        }
+
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        const result = canvas.toDataURL("image/jpeg", quality);
+        URL.revokeObjectURL(img.src);
+        console.log(`Image compressed: ${url} (${result.length} chars)`);
+        resolve(result);
       };
-      img.onerror = () => resolve(null);
+      img.onerror = (e) => {
+        console.error(`Image element failed to load: ${url}`, e);
+        URL.revokeObjectURL(img.src);
+        resolve(null);
+      };
       img.src = URL.createObjectURL(blob);
     });
-  } catch (_e) {
+  } catch (e) {
+    console.error(`compressImage error for ${url}:`, e);
     return null;
   }
 }
 
 async function loadLogoAsBase64(): Promise<string | null> {
-  // Logo is small (177x177), keep it sharp with higher quality
-  return compressImage("/logo.png", 400, 400, 0.9, true);
+  // Logo is small (177x177), keep it sharp with max quality and higher resolution
+  return compressImage("/logo.png", 800, 800, 1.0, true);
 }
 
 export async function generateReportCardPDF(
@@ -88,11 +106,11 @@ export async function generateReportCardPDF(
 
   // ========== TOP THIRD (Header Section) ==========
 
-  // Add pointy mountains in background (top third)
+  // Add pointy mountains in background (bottom of page)
   try {
     const pointyBase64 = await loadPointyAsBase64();
     if (pointyBase64) {
-      doc.addImage(pointyBase64, "JPEG", 0, thirdPage - 80, pageWidth, 200);
+      doc.addImage(pointyBase64, "JPEG", 0, pageHeight - 140, pageWidth, 200);
     }
   } catch (_e) {
     console.log("Pointy mountains image not loaded");
@@ -102,9 +120,9 @@ export async function generateReportCardPDF(
   try {
     const skierLogoBase64 = await loadSkierLogoAsBase64();
     if (skierLogoBase64) {
-      const skierSize = 120;
-      const centerX = (pageWidth - skierSize) / 1.2;
-      const centerY = thirdPage - 80;
+      const skierSize = 80;
+      const centerX = (pageWidth - skierSize) / 1.3;
+      const centerY = pageHeight - 260;
       doc.addImage(
         skierLogoBase64,
         "PNG",
@@ -134,11 +152,11 @@ export async function generateReportCardPDF(
   const black: [number, number, number] = [0, 0, 0];
 
   // Right side - Congratulations message (after logo)
-  const rightX = margin + 60;
+  const rightX = margin + 100;
   doc.setFontSize(30);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...brandBlue);
-  doc.text("CONGRATULATIONS!", rightX, 30);
+  doc.text("WELL DONE!", rightX, 30);
 
   // Athlete, Coach, Season and Group Name (middle of top third)
   const topThirdMiddle = thirdPage / 2 + 16;
@@ -165,21 +183,21 @@ export async function generateReportCardPDF(
 
   const leftX = margin;
 
-  let currentY = thirdPage + 5;
+  let currentY = thirdPage - 2;
 
-  // Athlete's Skills and Progressions header - under the mountain/skier image
-  currentY += 32;
-  doc.setFontSize(16);
+  // Athlete's Skills and Progressions header
+  currentY += 10;
+  doc.setFontSize(14);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...brandBlue);
   doc.text("Athlete's Skills and Progressions", leftX, currentY);
   currentY += lineHeight + 1;
 
   // Legend
-  doc.setFontSize(6);
-  doc.setFont("Montserrat", "italic");
+  doc.setFontSize(7);
+  doc.setFont("Montserrat", "normal");
   doc.setTextColor(...darkGray);
-  doc.text("1- Area of Focus | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Mastered!", leftX, currentY);
+  doc.text("0- Not Attempted | 1- Area of Focus | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Mastered!", leftX, currentY);
   currentY += lineHeight + 3;
 
   // Group skill scores by category
@@ -191,11 +209,11 @@ export async function generateReportCardPDF(
     } else if (score.skill_id.startsWith("program-")) {
       category = "Programs for Next Season";
     } else if (score.skill_id.startsWith("effort-participation")) {
-      category = "Effort & Participation";
+      category = "Athlete Participation";
     } else if (score.skill_id.startsWith("moguls-")) {
       category = "Moguls";
     } else if (score.skill_id.startsWith("bigair-")) {
-      category = "Jumping";
+      category = "Air Skills";
     } else if (score.skill_id.startsWith("freeski-")) {
       category = "Freeskiing";
     } else if (score.skill_id.startsWith("jump-")) {
@@ -215,37 +233,40 @@ export async function generateReportCardPDF(
     }
   });
 
-  // Define the 6 categories - displayed with Effort & Participation as two lines
+  // Define the categories for the report card
   const categories = [
-    "Effort & Participation",
+    "Athlete Participation",
     "Moguls",
     "Air Tricks",
-    "Jumping",
+    "Air Skills",
     "Freeskiing",
     "Terrain Park",
   ];
   const skillsStartY = currentY;
 
   // Layout constants - reduced spacing
-  const categoryRowHeight = 8;
+  const categoryRowHeight = 6;
+  const skillLineHeight = 4;
 
-  // Column positions
+  // Column positions - category on left, skills in a grid on the right
   const categoryColX = leftX;
-  const scoresColX = leftX + 55;
+  const scoresColX = leftX + 50;
+  const colWidth = 45; // fixed column width for each skill
+  const numCols = Math.floor((pageWidth - margin - scoresColX) / colWidth);
 
   let currentRowY = skillsStartY;
 
-  // Draw each category with inline scores
+  // Draw each category with grid-aligned scores
   categories.forEach((category) => {
     const skills = groupedSkills[category] || [];
 
     // Category name on the left
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont("Montserrat", "bold");
     doc.setTextColor(...brandBlue);
     doc.text(`${category}:`, categoryColX, currentRowY);
 
-    // Scores inline on the right - with line wrapping for long categories
+    // Scores in fixed-width columns on the right
     if (skills.length === 0) {
       doc.setFontSize(8);
       doc.setFont("Montserrat", "italic");
@@ -255,35 +276,42 @@ export async function generateReportCardPDF(
       doc.setFontSize(8);
       doc.setFont("Montserrat", "normal");
       doc.setTextColor(...black);
-      // Spread skills across the line with tight spacing and wrap if needed
-      let skillX = scoresColX;
-      let skillY = currentRowY;
-      const maxX = pageWidth - margin - 5;
 
+      let rowStartY = currentRowY;
       skills.forEach((skill, index) => {
-        const scoreText = skill.score ? skill.score.toString() : "-";
-        const skillText = `${skill.skill_name}: ${scoreText}`;
-        const textWidth = skillText.length * 2.5;
+        const col = index % numCols;
+        const row = Math.floor(index / numCols);
+        const skillX = scoresColX + col * colWidth;
+        const skillY = rowStartY + row * skillLineHeight;
 
-        // Check if this skill would go off the page
-        if (skillX + textWidth > maxX && index > 0) {
-          // Wrap to next line
-          skillY += 5;
-          skillX = scoresColX;
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? skill.score.toString() : "-";
+        
+        // Skill name (truncated if needed)
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...darkGray);
+        let displayName = skill.skill_name;
+        // Truncate long names to fit column
+        const maxNameWidth = colWidth - 12;
+        while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 3) {
+          displayName = displayName.slice(0, -1);
         }
+        if (displayName !== skill.skill_name) displayName += "..";
+        doc.text(displayName, skillX, skillY);
 
-        doc.text(skillText, skillX, skillY);
-        // Move x position for next skill (approximate width + tight spacing)
-        skillX += textWidth + 4;
+        // Score value right-aligned within column
+        doc.setFont("Montserrat", "bold");
+        doc.setTextColor(...black);
+        doc.text(scoreText, skillX + colWidth - 8, skillY);
       });
 
-      // Update currentRowY if we wrapped to multiple lines
-      if (skillY > currentRowY) {
-        currentRowY = skillY;
+      // Update currentRowY based on number of rows used
+      const totalRows = Math.ceil(skills.length / numCols);
+      if (totalRows > 1) {
+        currentRowY += (totalRows - 1) * skillLineHeight;
       }
     }
 
-    currentRowY += categoryRowHeight + 2;
+    currentRowY += categoryRowHeight + 1;
   });
 
   // ========== BOTTOM THIRD - WHAT'S NEXT ==========
@@ -326,11 +354,10 @@ export async function generateReportCardPDF(
   // Only show What's Next section if there's something to display
   if (hasTrainingOrPrograms || hasGoals) {
     // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
-    // Increased gap from skills section (+35 instead of +25)
-    let bottomY = thirdPage * 2 + 35;
+    let bottomY = Math.max(currentRowY + 5, thirdPage * 2 + 12);
 
     // What's Next? header
-    doc.setFontSize(18);
+    doc.setFontSize(14);
     doc.setFont("Montserrat", "bold");
     doc.setTextColor(...brandBlue);
     doc.text("What's Next?", leftX, bottomY);
@@ -398,6 +425,7 @@ export async function generateReportCardPDF(
 
     // Goals underneath Training and Programs
     if (hasGoals) {
+      bottomY += 6;
       doc.setFontSize(14);
       doc.setFont("Montserrat", "bold");
       doc.setTextColor(...brandBlue);
@@ -417,7 +445,7 @@ export async function generateReportCardPDF(
   doc.setFontSize(16);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...brandBlue);
-  doc.text("See you next season!", pageWidth / 2, pageHeight - 15, {
+  doc.text("See you next season!", pageWidth / 2, pageHeight - 28, {
     align: "center",
   });
 
@@ -429,14 +457,23 @@ async function loadSkierLogoAsBase64(): Promise<string | null> {
   // Keep as PNG to preserve transparency - no white fill
   try {
     const response = await fetch('/skierlogo.png');
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error(`Skier logo fetch failed: ${response.status}`);
+      return null;
+    }
     const blob = await response.blob();
+    console.log(`Skier logo fetched: ${blob.size} bytes, ${blob.type}`);
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = (e) => {
+        console.error('Skier logo FileReader error:', e);
+        resolve(null);
+      };
       reader.readAsDataURL(blob);
     });
-  } catch (_e) {
+  } catch (e) {
+    console.error('loadSkierLogoAsBase64 error:', e);
     return null;
   }
 }
@@ -444,7 +481,7 @@ async function loadSkierLogoAsBase64(): Promise<string | null> {
 async function loadPointyAsBase64(): Promise<string | null> {
   // Background mountains - 2480x3508 original, way too large
   // Scale down to 800x400 max for PDF use
-  return compressImage("/biggermountains.png", 1600, 1000, 0.8, true);
+  return compressImage("/biggermountains.png", 1600, 1000, 0.8, true, 0.8);
 }
 
 export async function downloadReportCardPDF(
