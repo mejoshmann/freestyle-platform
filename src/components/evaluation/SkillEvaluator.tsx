@@ -142,13 +142,14 @@ export default function SkillEvaluator({
   }, [onBackToRoster, onCancel])
 
   return (
-    <div className="bg-white rounded-t-lg sm:rounded-lg shadow-lg p-4 sm:p-6">
+    <div className="bg-white rounded-t-lg sm:rounded-lg shadow-lg p-3 sm:p-6 max-w-full">
       {/* Header */}
       <EvalHeader 
         athleteName={athleteName}
         evaluatedCount={evaluatedCount}
         totalCount={skills.length}
         skippedCount={skippedCount}
+        onClose={onCancel}
       />
 
       {/* Group Name Input */}

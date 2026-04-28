@@ -49,14 +49,14 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
     // Simple Yes toggle for Programs - click to select, click again to deselect
     const isYes = value === "Yes"
     return (
-      <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+      <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
         <div className="flex justify-between items-center">
-          <label className={`text-sm sm:text-base font-medium ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+          <label className={`text-xs sm:text-base font-medium ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
             {skill.name}
           </label>
           <button
             onClick={() => onChange(isYes ? null : "Yes")}
-            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-bold text-sm transition-colors ${
               isYes
                 ? 'bg-green-500 text-white hover:bg-green-600'
                 : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
@@ -77,14 +77,14 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
     // Single "Recommended" toggle for Training - click to select, click again to deselect
     const isRecommended = value === "Recommended"
     return (
-      <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+      <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
         <div className="flex justify-between items-center">
-          <label className={`text-sm sm:text-base font-medium ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+          <label className={`text-xs sm:text-base font-medium ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
             {skill.name}
           </label>
           <button
             onClick={handleToggle}
-            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-bold text-sm transition-colors ${
               isRecommended
                 ? 'bg-blue-500 text-white hover:bg-blue-600'
                 : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
@@ -103,16 +103,17 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
 
   const isAttendance = skillIdLower === 'attendance' || skillIdLower.startsWith('attendance-')
   const isAttitudeEngagement = skillIdLower === 'effort-participation'
+  const isParkSafety = skillIdLower === 'park-safety'
 
   // Regular 0-4 slider for other skills
   return (
-    <div className={`p-3 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
-      <div className="flex justify-between items-center mb-2">
-        <label className={`text-sm sm:text-base font-medium ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+    <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+      <div className="flex justify-between items-center mb-2 gap-2">
+        <label className={`text-xs sm:text-base font-medium flex-1 min-w-0 ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
           {skill.name}
         </label>
-        <div className="flex items-center space-x-2">
-          <span className={`text-xl sm:text-lg font-bold min-w-[2rem] text-center ${isSkipped ? 'text-gray-400' : 'text-blue-600'}`}>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <span className={`text-lg sm:text-lg font-bold min-w-[1.5rem] text-center ${isSkipped ? 'text-gray-400' : 'text-blue-600'}`}>
             {displayValue}
           </span>
           <button
@@ -140,7 +141,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             step={1}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
-            className="w-full h-3 sm:h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 touch-manipulation"
+            className="w-full h-3 sm:h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 touch-manipulation max-w-full"
             style={{ touchAction: 'manipulation' }}
           />
           <div className="flex justify-between text-xs text-gray-400 mt-2 sm:mt-1 px-1">
@@ -151,11 +152,11 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             <span>4</span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span className="text-left">{isAttendance || isAttitudeEngagement ? 'N/A' : 'No Attempt'}</span>
-            <span className="text-left">{isAttendance || isAttitudeEngagement ? '' : 'Tried it'}</span>
+            <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety ? 'N/A' : 'No Attempt'}</span>
+            <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety ? '' : 'Tried it'}</span>
             <span></span>
             <span></span>
-            <span className="text-right">{isAttendance ? '100%' : isAttitudeEngagement ? 'Stoked' : 'Stomped it'}</span>
+            <span className="text-right">{isAttendance ? '100%' : isAttitudeEngagement ? 'Stoked' : isParkSafety ? 'Safe' : 'Stomped it'}</span>
           </div>
         </>
       )}
