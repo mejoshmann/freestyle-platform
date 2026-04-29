@@ -33,8 +33,6 @@ export default function Roster() {
   const [mediaAthlete, setMediaAthlete] = useState<Athlete | null>(null)
   const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
   
-  // Filters
-  const [filterCoach, setFilterCoach] = useState<string>('')
   
   // View mode: 'my roster' or 'all athletes'
   const [viewMode, setViewMode] = useState<'my roster' | 'all athletes'>('my roster')
@@ -220,11 +218,10 @@ export default function Roster() {
     ? athletes.filter(a => myRosterIds.has(a.id))
     : athletes
   
-  const uniqueCoaches = Array.from(new Set(athletesToFilter.map(a => a.coach_name).filter(Boolean))).sort()
+  const uniqueCoaches: string[] = []
 
   // Filter athletes
-  const filteredAthletes = athletesToFilter.filter(athlete => {
-    if (filterCoach && athlete.coach_name !== filterCoach) return false
+  const filteredAthletes = athletesToFilter.filter(() => {
     return true
   })
 
@@ -277,38 +274,7 @@ export default function Roster() {
             </div>
           </div>
 
-          {/* Filters - Coach only sees Coach filter */}
-          {athletes.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-4 mb-6">
-              <div className="flex flex-wrap gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Coach</label>
-                  <select
-                    value={filterCoach}
-                    onChange={(e) => setFilterCoach(e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-                  >
-                    <option value="">Coaches</option>
-                    {uniqueCoaches.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                {filterCoach && (
-                  <div className="flex items-end">
-                    <button
-                      onClick={() => {
-                        setFilterCoach('')
-                      }}
-                      className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
-                    >
-                      Clear Filter
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Filters removed - coach dropdown was confusing */}
 
 
 
