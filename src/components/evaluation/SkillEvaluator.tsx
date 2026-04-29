@@ -6,6 +6,7 @@ import EvalHeader from './EvalHeader'
 import SkillsList from './SkillsList'
 import DesktopActions from './DesktopActions'
 import MobileEvalNav from './MobileEvalNav'
+import MediaGallery from '../media/MediaGallery'
 
 // Categories that should use Yes/No or Recommended instead of 1-4 slider
 const yesNoCategories = ['Programs for Next Season']
@@ -61,6 +62,7 @@ export default function SkillEvaluator({
   const [notes, setNotes] = useState('')
   const [groupName, setGroupName] = useState('')
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
+  const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
 
   // Computed values
   const evaluatedCount = scores.filter(s => s.score !== null).length
@@ -105,6 +107,7 @@ export default function SkillEvaluator({
       alert('Failed to upload media: ' + result.error)
     } else {
       console.log('Media uploaded successfully:', result.url)
+      setMediaRefreshKey(prev => prev + 1)
     }
   }, [athleteId, athleteName, coach])
 
@@ -130,6 +133,7 @@ export default function SkillEvaluator({
       alert('Failed to upload media: ' + result.error)
     } else {
       console.log('Media uploaded successfully:', result.url)
+      setMediaRefreshKey(prev => prev + 1)
     }
   }, [athleteId, athleteName, coach])
 
@@ -151,6 +155,15 @@ export default function SkillEvaluator({
         skippedCount={skippedCount}
         onClose={onCancel}
       />
+
+      {/* Media Gallery */}
+      <div className="mb-4">
+        <MediaGallery
+          key={mediaRefreshKey}
+          athleteId={athleteId}
+          isCoach={!!coach}
+        />
+      </div>
 
       {/* Group Name Input */}
       <div className="mb-4 sm:mb-6">
