@@ -11,7 +11,7 @@ export const defaultTemplates: TemplateDefinition[] = [
     name: 'Attendance',
     description: 'Athlete attendance tracking',
     skills: [
-      { id: 'attendance', name: 'Attendance', description: 'Number of sessions attended' },
+      { id: 'attendance', name: 'Attendance', description: 'Percentage of sessions attended' },
     ],
   },
   {

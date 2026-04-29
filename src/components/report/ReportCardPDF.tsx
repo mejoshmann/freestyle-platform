@@ -110,7 +110,7 @@ export async function generateReportCardPDF(
   try {
     const pointyBase64 = await loadPointyAsBase64();
     if (pointyBase64) {
-      doc.addImage(pointyBase64, "JPEG", 0, pageHeight - 140, pageWidth, 200);
+      doc.addImage(pointyBase64, "PNG", -2, pageHeight - 128, pageWidth + 4, 200);
     }
   } catch (_e) {
     console.log("Pointy mountains image not loaded");
@@ -197,7 +197,7 @@ export async function generateReportCardPDF(
   doc.setFontSize(7);
   doc.setFont("Montserrat", "normal");
   doc.setTextColor(...darkGray);
-  doc.text("0- Not Attempted | 1- Area of Focus | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Mastered!", leftX, currentY);
+  doc.text("0- Not Attempted | 1- Tried It | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Stomped It!", leftX, currentY);
   currentY += lineHeight + 3;
 
   // Group skill scores by category
@@ -354,7 +354,7 @@ export async function generateReportCardPDF(
   // Only show What's Next section if there's something to display
   if (hasTrainingOrPrograms || hasGoals) {
     // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
-    let bottomY = Math.max(currentRowY + 5, thirdPage * 2 + 12);
+    let bottomY = Math.max(currentRowY + 5, thirdPage * 2 + 6);
 
     // What's Next? header
     doc.setFontSize(14);
@@ -445,7 +445,7 @@ export async function generateReportCardPDF(
   doc.setFontSize(16);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...brandBlue);
-  doc.text("See you next season!", pageWidth / 2, pageHeight - 28, {
+  doc.text("SEE YOU NEXT SEASON!", pageWidth / 2, pageHeight - 28, {
     align: "center",
   });
 
@@ -479,9 +479,28 @@ async function loadSkierLogoAsBase64(): Promise<string | null> {
 }
 
 async function loadPointyAsBase64(): Promise<string | null> {
-  // Background mountains - 2480x3508 original, way too large
-  // Scale down to 800x400 max for PDF use
-  return compressImage("/biggermountains.png", 1600, 1000, 0.8, true, 0.8);
+  // Load mountain background directly without compression
+  try {
+    const response = await fetch('/mountainBg.png');
+    if (!response.ok) {
+      console.error(`Mountain bg fetch failed: ${response.status}`);
+      return null;
+    }
+    const blob = await response.blob();
+    console.log(`Mountain bg fetched: ${blob.size} bytes, ${blob.type}`);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = (e) => {
+        console.error('Mountain bg FileReader error:', e);
+        resolve(null);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.error('Mountain bg load error:', e);
+    return null;
+  }
 }
 
 export async function downloadReportCardPDF(
