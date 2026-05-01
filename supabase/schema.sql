@@ -189,6 +189,7 @@ create table if not exists evaluations (
   skill_scores jsonb not null default '[]',
   notes text,
   group_name text,  -- Custom group name given by athletes (e.g., "Snow Riders", "Mountain Hawks")
+  program_type text,
   category_notes jsonb default '{}'::jsonb,
   evaluated_at timestamp with time zone default timezone('utc'::text, now()) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,

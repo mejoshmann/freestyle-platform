@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { Athlete, Skill, TemplateCategory } from '../types'
 
-import { defaultTemplates } from '../data/defaultTemplates'
+import { defaultTemplates, fundamentalzTemplates, freestylerzTemplates } from '../data/defaultTemplates'
 import AthleteCard from '../components/roster/AthleteCard'
 import SkillEvaluator from '../components/evaluation/SkillEvaluator'
 import MediaGallery from '../components/media/MediaGallery'
@@ -25,6 +25,8 @@ export default function Roster() {
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null)
   const [showEvaluation, setShowEvaluation] = useState(false)
   const [showMetricsSelector, setShowMetricsSelector] = useState(false)
+  const [selectedProgramType, setSelectedProgramType] = useState<string | null>(null)
+  const [showProgramSelector, setShowProgramSelector] = useState(false)
   const [metricsSets, setMetricsSets] = useState<MetricsSet[]>([])
   const [selectedMetricsSet, setSelectedMetricsSet] = useState<MetricsSet | null>(null)
   const [loading, setLoading] = useState(true)
@@ -38,8 +40,13 @@ export default function Roster() {
   const [viewMode, setViewMode] = useState<'my roster' | 'all athletes'>('my roster')
   const [myRosterIds, setMyRosterIds] = useState<Set<string>>(new Set())
 
-  // All skills from all categories (default)
-  const allSkills: Skill[] = defaultTemplates.flatMap(t => t.skills)
+  // All skills from all categories (dynamic based on selected program)
+  const activeTemplates = selectedProgramType === 'fundamentalz'
+    ? fundamentalzTemplates
+    : selectedProgramType === 'freestylerz'
+      ? freestylerzTemplates
+      : defaultTemplates
+  const allSkills: Skill[] = activeTemplates.flatMap(t => t.skills)
 
   async function loadData() {
     if (!coach) {
@@ -112,7 +119,8 @@ export default function Roster() {
       skill_scores: scores,
       notes,
       group_name: groupName || null,
-      category_notes: categoryNotes || null
+      category_notes: categoryNotes || null,
+      program_type: selectedProgramType
     }
 
     const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
@@ -218,8 +226,6 @@ export default function Roster() {
     ? athletes.filter(a => myRosterIds.has(a.id))
     : athletes
   
-  const uniqueCoaches: string[] = []
-
   // Filter athletes
   const filteredAthletes = athletesToFilter.filter(() => {
     return true
@@ -317,7 +323,7 @@ export default function Roster() {
                       stats={stats}
                       onClick={() => {
                         setSelectedAthlete(athlete)
-                        setShowMetricsSelector(true)
+                        setShowProgramSelector(true)
                       }}
                       onDelete={viewMode === 'my roster' ? () => setShowDeleteConfirm(athlete.id) : undefined}
                       onViewMedia={() => {
@@ -363,6 +369,75 @@ export default function Roster() {
           )}
         </div>
       </div>
+
+      {/* Program Selector Modal */}
+      {selectedAthlete && showProgramSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+          <div className="bg-[#1a1a2e] rounded-xl shadow-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Select Program
+                </h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  Choose a program for {selectedAthlete.full_name}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowProgramSelector(false)
+                  setSelectedAthlete(null)
+                  setSelectedProgramType(null)
+                }}
+                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {/* FundamentalZ */}
+              <button
+                onClick={() => {
+                  setSelectedProgramType('fundamentalz')
+                  setShowProgramSelector(false)
+                  setShowMetricsSelector(true)
+                }}
+                className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-left group"
+              >
+                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">FundamentalZ</h3>
+                <p className="text-sm text-gray-400 mt-1">Foundation skills program</p>
+              </button>
+
+              {/* Freestylerz / Girlstylerz / Night Riders */}
+              <button
+                onClick={() => {
+                  setSelectedProgramType('freestylerz')
+                  setShowProgramSelector(false)
+                  setShowMetricsSelector(true)
+                }}
+                className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-left group"
+              >
+                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">Freestylerz / Girlstylerz / Night Riders</h3>
+                <p className="text-sm text-gray-400 mt-1">Advanced freestyle programs</p>
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowProgramSelector(false)
+                setSelectedAthlete(null)
+                setSelectedProgramType(null)
+              }}
+              className="w-full py-3 px-4 border border-gray-600 text-gray-300 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Metrics Selector Modal */}
       {selectedAthlete && showMetricsSelector && (
@@ -413,6 +488,7 @@ export default function Roster() {
                 onClick={() => {
                   setShowMetricsSelector(false)
                   setSelectedAthlete(null)
+                  setSelectedProgramType(null)
                 }}
                 className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
               >
@@ -437,11 +513,13 @@ export default function Roster() {
                 setSelectedAthlete(null)
                 setShowEvaluation(false)
                 setSelectedMetricsSet(null)
+                setSelectedProgramType(null)
               }}
               onBackToRoster={() => {
                 setSelectedAthlete(null)
                 setShowEvaluation(false)
                 setSelectedMetricsSet(null)
+                setSelectedProgramType(null)
               }}
             />
           </div>

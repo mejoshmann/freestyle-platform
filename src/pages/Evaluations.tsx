@@ -12,6 +12,7 @@ interface Evaluation {
   skill_scores: { skill_id: string; skill_name: string; score: number | string | null }[]
   notes: string
   group_name?: string
+  program_type?: string
   created_at: string
 }
 
@@ -126,17 +127,29 @@ export default function Evaluations() {
                       </p>
                     )}
                   </div>
-                  {evaluation.created_at && (
-                    <span className="text-sm text-gray-500">
-                      {new Date(evaluation.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {evaluation.program_type === 'fundamentalz' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        FundamentalZ
+                      </span>
+                    )}
+                    {evaluation.program_type === 'freestylerz' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Freestylerz / Girlstylerz / Night Riders
+                      </span>
+                    )}
+                    {evaluation.created_at && (
+                      <span className="text-sm text-gray-500">
+                        {new Date(evaluation.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Skill Scores */}

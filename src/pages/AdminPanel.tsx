@@ -170,7 +170,8 @@ export default function AdminPanel() {
       notes: reportCard.evaluation?.notes || '',
       season: '2025/26',
       date: new Date().toLocaleDateString(),
-      groupName: reportCard.evaluation?.group_name
+      groupName: reportCard.evaluation?.group_name,
+      programType: reportCard.evaluation?.program_type
     })
     // Extract base64 content for email (remove data URL prefix)
     const pdfBase64 = pdfDataUrl.split(',')[1]
@@ -240,7 +241,8 @@ export default function AdminPanel() {
             notes: evaluation.notes || '',
             season: '2025/26',
             date: new Date().toLocaleDateString(),
-            groupName: evaluation.group_name
+            groupName: evaluation.group_name,
+            programType: evaluation.program_type
           })
           // Convert data URL to blob URL for better iframe compatibility
           const byteString = atob(pdfBase64.split(',')[1])

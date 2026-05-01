@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import type { Athlete } from "../../types";
 import { registerMontserrat } from "../../lib/registerFonts";
+import { fundamentalzTemplates, freestylerzTemplates } from "../../data/defaultTemplates";
 
 interface SkillScore {
   skill_id: string;
@@ -16,6 +17,7 @@ interface ReportCardData {
   season: string;
   date: string;
   groupName?: string;
+  programType?: string;
 }
 
 async function compressImage(
@@ -95,7 +97,14 @@ export async function generateReportCardPDF(
 ): Promise<string> {
   const doc = new jsPDF({ compress: true });
   registerMontserrat(doc);
-  const { athlete, coachName, skillScores, notes, season, groupName } = data;
+  const { athlete, coachName, skillScores, notes, season, groupName, programType } = data;
+
+  // Build skill description lookup from templates
+  const templates = programType === 'fundamentalz' ? fundamentalzTemplates : freestylerzTemplates
+  const skillDescriptions: Record<string, string> = {}
+  templates.forEach(t => t.skills.forEach(s => {
+    if (s.description) skillDescriptions[s.id] = s.description
+  }))
 
   // Page dimensions
   const pageWidth = 210;
@@ -179,6 +188,20 @@ export async function generateReportCardPDF(
   );
   doc.text(`Season: ${season}`, margin, topThirdMiddle + 24);
 
+  // Program type
+  if (programType) {
+    const programTypeDisplay =
+      programType === "fundamentalz"
+        ? "FundamentalZ"
+        : programType === "freestylerz"
+          ? "Freestylerz / Girlstylerz / Night Riders"
+          : programType;
+    doc.setFontSize(12);
+    doc.setFont("Montserrat", "bold");
+    doc.setTextColor(...brandBlue);
+    doc.text(`Program: ${programTypeDisplay}`, margin, topThirdMiddle + 32);
+  }
+
   // ========== MIDDLE THIRD - SKILLS SECTION ==========
 
   const leftX = margin;
@@ -197,7 +220,7 @@ export async function generateReportCardPDF(
   doc.setFontSize(7);
   doc.setFont("Montserrat", "normal");
   doc.setTextColor(...darkGray);
-  doc.text("0- Not Attempted | 1- Tried It | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Stomped It!", leftX, currentY);
+  doc.text("0- N/A | 1- Tried It | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Stomped It!", leftX, currentY);
   currentY += lineHeight + 3;
 
   // Group skill scores by category
@@ -208,14 +231,16 @@ export async function generateReportCardPDF(
       category = "Suggested Training";
     } else if (score.skill_id.startsWith("program-")) {
       category = "Programs for Next Season";
+    } else if (score.skill_id === "attendance" || score.skill_id.startsWith("attendance-")) {
+      category = "Attendance";
     } else if (score.skill_id.startsWith("effort-participation")) {
       category = "Athlete Participation";
     } else if (score.skill_id.startsWith("moguls-")) {
-      category = "Moguls";
+      category = "Moguls / Bumps";
     } else if (score.skill_id.startsWith("bigair-")) {
       category = "Air Skills";
     } else if (score.skill_id.startsWith("freeski-")) {
-      category = "Freeskiing";
+      category = "Freeride";
     } else if (score.skill_id.startsWith("jump-")) {
       category = "Air Tricks";
     } else if (score.skill_id.startsWith("park-")) {
@@ -235,11 +260,12 @@ export async function generateReportCardPDF(
 
   // Define the categories for the report card
   const categories = [
+    "Attendance",
     "Athlete Participation",
-    "Moguls",
+    "Freeride",
+    "Moguls / Bumps",
     "Air Tricks",
     "Air Skills",
-    "Freeskiing",
     "Terrain Park",
   ];
   const skillsStartY = currentY;
@@ -251,8 +277,8 @@ export async function generateReportCardPDF(
   // Column positions - category on left, skills in a grid on the right
   const categoryColX = leftX;
   const scoresColX = leftX + 50;
-  const colWidth = 45; // fixed column width for each skill
-  const numCols = Math.floor((pageWidth - margin - scoresColX) / colWidth);
+  const numCols = 2; // 2 columns for all categories, aligned with Freeride
+  const colWidth = (pageWidth - margin - scoresColX) / numCols;
 
   let currentRowY = skillsStartY;
 
@@ -272,6 +298,60 @@ export async function generateReportCardPDF(
       doc.setFont("Montserrat", "italic");
       doc.setTextColor(...darkGray);
       doc.text("No skills evaluated", scoresColX, currentRowY);
+    } else if (category === "Freeride") {
+      // Special rendering for Freeride with descriptions
+      const descLineHeight = 2.5;
+
+      let rowStartY = currentRowY;
+      let currentRowMaxHeight = skillLineHeight * 1.5;
+
+      skills.forEach((skill, index) => {
+        const col = index % numCols;
+        const skillX = scoresColX + col * colWidth;
+        const skillY = rowStartY;
+
+        const isAttendance = skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isAttendance ? `${(skill.score as number) * 25}%` : skill.score.toString()) : "-";
+
+        // Skill name
+        doc.setFontSize(8);
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...darkGray);
+        let displayName = skill.skill_name;
+        const maxNameWidth = colWidth - 12;
+        while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 3) {
+          displayName = displayName.slice(0, -1);
+        }
+        if (displayName !== skill.skill_name) displayName += "..";
+        doc.text(displayName, skillX, skillY);
+
+        // Score value right-aligned within column
+        doc.setFont("Montserrat", "bold");
+        doc.setTextColor(...black);
+        doc.text(scoreText, skillX + colWidth - 8, skillY);
+
+        // Description on next line
+        const description = skillDescriptions[skill.skill_id];
+        let skillHeight = skillLineHeight * 1.5;
+        if (description) {
+          doc.setFontSize(6);
+          doc.setFont("Montserrat", "normal");
+          doc.setTextColor(...darkGray);
+          const wrapped = doc.splitTextToSize(description, colWidth - 12);
+          doc.text(wrapped, skillX, skillY + 3);
+          skillHeight = 3 + wrapped.length * descLineHeight + 1;
+        }
+
+        currentRowMaxHeight = Math.max(currentRowMaxHeight, skillHeight);
+
+        // Advance to next row after last column or last skill
+        if (col === numCols - 1 || index === skills.length - 1) {
+          rowStartY += currentRowMaxHeight;
+          currentRowMaxHeight = skillLineHeight * 1.5;
+        }
+      });
+
+      currentRowY = rowStartY;
     } else {
       doc.setFontSize(8);
       doc.setFont("Montserrat", "normal");
@@ -284,7 +364,8 @@ export async function generateReportCardPDF(
         const skillX = scoresColX + col * colWidth;
         const skillY = rowStartY + row * skillLineHeight;
 
-        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? skill.score.toString() : "-";
+        const isAttendance = skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isAttendance ? `${(skill.score as number) * 25}%` : skill.score.toString()) : "-";
         
         // Skill name (truncated if needed)
         doc.setFont("Montserrat", "normal");
@@ -429,7 +510,7 @@ export async function generateReportCardPDF(
       doc.setFontSize(14);
       doc.setFont("Montserrat", "bold");
       doc.setTextColor(...brandBlue);
-      doc.text("Goals for Next Season", leftX, bottomY);
+      doc.text("Goals for Next Season:", leftX, bottomY);
       bottomY += lineHeight + 1;
 
       // Comments/goals text

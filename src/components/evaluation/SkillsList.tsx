@@ -20,10 +20,10 @@ export default function SkillsList({ skills, categories, scores, onScoreChange, 
     const prefixToName: Record<string, string> = {
       'effort': 'Athlete Participation',
       'attendance': 'Attendance',
-      'moguls': 'Moguls',
+      'moguls': 'Moguls / Bumps',
       'bigair': 'Air Skills',
       'jump': 'Air Tricks',
-      'freeski': 'Freeskiing',
+      'freeski': 'Freeride',
       'park': 'Terrain Park',
       'training': 'Suggested Training',
       'program': 'Programs for Next Season'

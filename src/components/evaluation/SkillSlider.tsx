@@ -152,7 +152,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             <span>4</span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety ? 'N/A' : 'No Attempt'}</span>
+            <span className="text-left">N/A</span>
             <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety ? '' : 'Tried it'}</span>
             <span></span>
             <span></span>

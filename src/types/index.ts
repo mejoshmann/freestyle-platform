@@ -66,6 +66,7 @@ export interface Evaluation {
   transcribed_notes?: string
   category_notes?: Record<string, string>
   group_name?: string
+  program_type?: string
   evaluated_at: string
 }
 

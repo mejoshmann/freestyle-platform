@@ -66,7 +66,6 @@ export default function SkillEvaluator({
 
   // Computed values
   const evaluatedCount = scores.filter(s => s.score !== null).length
-  const skippedCount = scores.filter(s => s.score === null).length
 
   // Handlers
   const updateScore = useCallback((skillId: string, value: number | string | null) => {
@@ -151,8 +150,6 @@ export default function SkillEvaluator({
       <EvalHeader 
         athleteName={athleteName}
         evaluatedCount={evaluatedCount}
-        totalCount={skills.length}
-        skippedCount={skippedCount}
         onClose={onCancel}
       />
 
