@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getAthleteMedia, deleteAthleteMedia, type MediaItem } from '../../lib/media'
 
 interface MediaGalleryProps {
@@ -10,6 +10,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
   const [media, setMedia] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null)
+  const [videoError, setVideoError] = useState(false)
 
   const loadMedia = async () => {
     setLoading(true)
@@ -40,6 +41,11 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
       day: 'numeric'
     })
   }
+
+  const handleSelectMedia = useCallback((item: MediaItem) => {
+    setVideoError(false)
+    setSelectedMedia(item)
+  }, [])
 
   const images = media.filter(m => m.type === 'image')
   const videos = media.filter(m => m.type === 'video')
@@ -72,7 +78,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
               <div key={image.id} className="bg-white rounded-lg shadow overflow-hidden">
                 <div 
                   className="relative aspect-square bg-gray-100 cursor-pointer"
-                  onClick={() => setSelectedMedia(image)}
+                  onClick={() => handleSelectMedia(image)}
                 >
                   <img
                     src={image.public_url}
@@ -107,13 +113,15 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
               <div key={video.id} className="bg-white rounded-lg shadow overflow-hidden">
                 <div 
                   className="relative aspect-video bg-black cursor-pointer"
-                  onClick={() => setSelectedMedia(video)}
+                  onClick={() => handleSelectMedia(video)}
                 >
                   <video
                     src={video.public_url}
                     className="w-full h-full object-cover"
                     preload="metadata"
-                    crossOrigin="anonymous"
+                    playsInline
+                    muted
+                    onError={(e) => console.error('Video thumbnail error:', e.currentTarget.error?.code, e.currentTarget.error?.message, video.public_url)}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-colors">
                     <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
@@ -153,14 +161,29 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
         >
           <div className="max-w-4xl w-full">
             {selectedMedia.type === 'video' ? (
-              <video
-                src={selectedMedia.public_url}
-                controls
-                autoPlay
-                className="w-full rounded-lg"
-                crossOrigin="anonymous"
-                onClick={(e) => e.stopPropagation()}
-              />
+              videoError ? (
+                <div className="bg-gray-900 rounded-lg p-8 text-center" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-white text-lg mb-4">This video format is not supported in your browser</p>
+                  <a
+                    href={selectedMedia.public_url}
+                    download
+                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Download Video
+                  </a>
+                </div>
+              ) : (
+                <video
+                  src={selectedMedia.public_url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full rounded-lg"
+                  onClick={(e) => e.stopPropagation()}
+                  onError={() => setVideoError(true)}
+                />
+              )
             ) : (
               <img
                 src={selectedMedia.public_url}

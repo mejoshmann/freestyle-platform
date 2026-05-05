@@ -12,7 +12,13 @@ export default function SignInForm({ onSubmit, error, onForgotPassword }: SignIn
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await onSubmit(email, password)
+
+    // Fall back to form element values if state is empty (browser autofill case)
+    const formData = new FormData(e.currentTarget as HTMLFormElement)
+    const emailValue = email || (formData.get('email') as string) || ''
+    const passwordValue = password || (formData.get('password') as string) || ''
+
+    await onSubmit(emailValue, passwordValue)
   }
 
   return (
@@ -29,6 +35,7 @@ export default function SignInForm({ onSubmit, error, onForgotPassword }: SignIn
         </label>
         <input
           type="email"
+          name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -42,6 +49,7 @@ export default function SignInForm({ onSubmit, error, onForgotPassword }: SignIn
         </label>
         <input
           type="password"
+          name="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"

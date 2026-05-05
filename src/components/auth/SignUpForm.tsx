@@ -13,8 +13,15 @@ export default function SignUpForm({ onSubmit, error }: SignUpFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    // Fall back to form element values if state is empty (browser autofill case)
+    const formData = new FormData(e.currentTarget as HTMLFormElement)
+    const emailValue = email || (formData.get('email') as string) || ''
+    const passwordValue = password || (formData.get('password') as string) || ''
+    const fullNameValue = fullName || (formData.get('fullName') as string) || ''
+
     try {
-      await onSubmit(email, password, fullName)
+      await onSubmit(emailValue, passwordValue, fullNameValue)
       setSuccess(true)
     } catch (err) {
       // Error is handled by parent
@@ -42,6 +49,7 @@ export default function SignUpForm({ onSubmit, error }: SignUpFormProps) {
         </label>
         <input
           type="text"
+          name="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -55,6 +63,7 @@ export default function SignUpForm({ onSubmit, error }: SignUpFormProps) {
         </label>
         <input
           type="email"
+          name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -68,6 +77,7 @@ export default function SignUpForm({ onSubmit, error }: SignUpFormProps) {
         </label>
         <input
           type="password"
+          name="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"

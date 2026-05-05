@@ -27,9 +27,20 @@ const sharedMoguls: TemplateDefinition = {
   name: 'Moguls / Bumps',
   description: 'Mogul skiing evaluation',
   skills: [
-    { id: 'moguls-stance', name: 'Stance', description: 'Body position and balance' },
+    { id: 'moguls-stance', name: 'Stance', description: 'Knees together, Proud upper body, Hands up, Vision up' },
     { id: 'moguls-shape', name: 'Shape', description: 'Quality of turns through moguls' },
     { id: 'moguls-absorption', name: 'Absorption', description: 'Absorption and extension technique' },
+  ],
+}
+
+// Program-specific Moguls categories
+const fundamentalzMoguls: TemplateDefinition = {
+  name: 'Moguls / Bumps',
+  description: 'Mogul skiing evaluation',
+  skills: [
+    { id: 'moguls-stance', name: 'Stance', description: 'Strong upper/ lower body and vision up' },
+    { id: 'moguls-terrain', name: 'Terrain', description: 'Create a route in Natural Terrain without stopping (5+ turns)' },
+    { id: 'moguls-style', name: 'Style', description: 'Pump the moguls' },
   ],
 }
 
@@ -37,9 +48,8 @@ const sharedAirSkills: TemplateDefinition = {
   name: 'Air Skills',
   description: 'Jumping skiing evaluation',
   skills: [
-    { id: 'bigair-takeoff', name: 'Take Off', description: 'Quality of jump takeoff' },
-    { id: 'bigair-extension', name: 'Extension', description: 'Body extension in the air' },
-    { id: 'bigair-amplitude', name: 'Amplitude', description: 'Height and distance achieved' },
+    { id: 'bigair-takeoff', name: 'Take Off', description: 'Timing of Takeoff' },
+    { id: 'bigair-extension', name: 'Extension', description: 'Extension through all joints' },
     { id: 'bigair-landing', name: 'Landing', description: 'Landing stability and control' },
   ],
 }
@@ -48,9 +58,41 @@ const sharedAirTricks: TemplateDefinition = {
   name: 'Air Tricks',
   description: 'Air Tricks evaluation',
   skills: [
+    { id: 'jump-safety-grab', name: 'Safety Grab', description: 'Safety grab' },
+    { id: 'jump-japan-grab', name: 'Japan Grab', description: 'Japan grab' },
+    { id: 'jump-mute-grab', name: 'Mute Grab', description: 'Mute grab' },
+    { id: 'jump-tip-tail-grabs', name: 'Tip/Tail Grabs', description: 'Tip and tail grab' },
+    { id: 'jump-left-180', name: 'Left Spin 180', description: 'Left 180 degree rotation' },
+    { id: 'jump-left-360', name: 'Left Spin 360', description: 'Left 360 degree rotation' },
+    { id: 'jump-left-540', name: 'Left Spin 540', description: 'Left 540 degree rotation' },
+    { id: 'jump-left-720', name: 'Left Spin 720', description: 'Left 720 degree rotation' },
+    { id: 'jump-right-180', name: 'Right Spin 180', description: 'Right 180 degree rotation' },
+    { id: 'jump-right-360', name: 'Right Spin 360', description: 'Right 360 degree rotation' },
+    { id: 'jump-right-540', name: 'Right Spin 540', description: 'Right 540 degree rotation' },
+    { id: 'jump-right-720', name: 'Right Spin 720', description: 'Right 720 degree rotation' },
+    { id: 'jump-switch-left-180', name: 'Switch Left Spin 180', description: 'Switch left 180 degree rotation' },
+    { id: 'jump-switch-left-360', name: 'Switch Left Spin 360', description: 'Switch left 360 degree rotation' },
+    { id: 'jump-switch-left-540', name: 'Switch Left Spin 540', description: 'Switch left 540 degree rotation' },
+    { id: 'jump-switch-left-720', name: 'Switch Left Spin 720', description: 'Switch left 720 degree rotation' },
+    { id: 'jump-switch-right-180', name: 'Switch Right Spin 180', description: 'Switch right 180 degree rotation' },
+    { id: 'jump-switch-right-360', name: 'Switch Right Spin 360', description: 'Switch right 360 degree rotation' },
+    { id: 'jump-switch-right-540', name: 'Switch Right Spin 540', description: 'Switch right 540 degree rotation' },
+    { id: 'jump-switch-right-720', name: 'Switch Right Spin 720', description: 'Switch right 720 degree rotation' },
+    { id: 'jump-spins-with-grab', name: 'Spins with Grab', description: 'Spin combined with grab' },
     { id: 'jump-difficulty', name: 'Difficulty of Trick / Execution', description: 'Complexity and execution quality of tricks' },
-    { id: 'jump-grabs', name: 'Grabs', description: 'Grab technique and style' },
-    { id: 'jump-spins', name: 'Spins', description: 'Spin control and rotation' },
+  ],
+}
+
+const fundamentalzAirTricks: TemplateDefinition = {
+  name: 'Air Tricks',
+  description: 'Air Tricks evaluation',
+  skills: [
+    { id: 'jump-grabs', name: 'Grabs', description: 'Grab and style' },
+    { id: 'jump-180', name: '180', description: '180 degree rotation' },
+    { id: 'jump-360', name: '360', description: '360 degree rotation' },
+    { id: 'jump-switch-180', name: 'Switch 180', description: 'Switch 180 degree rotation' },
+    { id: 'jump-switch-360', name: 'Switch 360', description: 'Switch 360 degree rotation' },
+    { id: 'jump-difficulty', name: 'Difficulty of Trick / Execution', description: 'Complexity and execution quality of tricks' },
   ],
 }
 
@@ -126,9 +168,9 @@ export const fundamentalzTemplates: TemplateDefinition[] = [
   sharedAttendance,
   sharedParticipation,
   fundamentalzFreeride,
-  sharedMoguls,
+  fundamentalzMoguls,
   sharedAirSkills,
-  sharedAirTricks,
+  fundamentalzAirTricks,
   sharedTerrainPark,
   sharedSuggestedTraining,
   sharedProgramsNextSeason,

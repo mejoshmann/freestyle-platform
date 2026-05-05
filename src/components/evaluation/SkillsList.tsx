@@ -7,11 +7,12 @@ interface SkillsListProps {
   categories?: TemplateCategory[]
   scores: SkillScore[]
   onScoreChange: (skillId: string, value: number | string | null) => void
+  onNotesChange: (skillId: string, notes: string) => void
   categoryNotes: Record<string, string>
   onCategoryNoteChange: (category: string, note: string) => void
 }
 
-export default function SkillsList({ skills, categories, scores, onScoreChange, categoryNotes, onCategoryNoteChange }: SkillsListProps) {
+export default function SkillsList({ skills, categories, scores, onScoreChange, onNotesChange, categoryNotes, onCategoryNoteChange }: SkillsListProps) {
   // Derive categories from skill IDs if not provided
   const derivedCategories = useMemo(() => {
     if (categories && categories.length > 0) return categories
@@ -59,6 +60,8 @@ export default function SkillsList({ skills, categories, scores, onScoreChange, 
                   skill={skill}
                   value={scores[scoreIndex]?.score ?? null}
                   onChange={(value) => onScoreChange(skill.id, value)}
+                  notes={scores[scoreIndex]?.notes}
+                  onNotesChange={(notes) => onNotesChange(skill.id, notes)}
                 />
               )
             })}

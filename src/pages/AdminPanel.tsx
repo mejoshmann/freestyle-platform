@@ -335,6 +335,32 @@ export default function AdminPanel() {
     loadData()
   }
 
+  async function deleteReportCard(reportCardId: string) {
+    if (!confirm('Are you sure you want to delete this report card?')) return
+
+    // NOTE: An admin DELETE RLS policy is required on the report_cards table
+    // in Supabase for this to work. Without it, the delete will be silently
+    // blocked by Row Level Security.
+    const { error, count } = await supabase
+      .from('report_cards')
+      .delete({ count: 'exact' })
+      .eq('id', reportCardId)
+
+    if (error) {
+      console.error('Error deleting report card:', error)
+      alert('Error deleting report card: ' + error.message)
+      return
+    }
+
+    if (count === 0) {
+      console.error('Delete returned 0 rows — likely blocked by RLS. Ensure an admin DELETE policy exists on report_cards.')
+      alert('Could not delete report card. It may be blocked by a security policy.')
+      return
+    }
+
+    loadData()
+  }
+
   function toggleAthleteSelection(athleteId: string) {
     const newSelected = new Set(selectedAthletes)
     if (newSelected.has(athleteId)) {
@@ -813,14 +839,23 @@ export default function AdminPanel() {
                           {rc.status === 'approved' && !rc.sent_to_parents && (
                             <button
                               onClick={() => sendReportCard(rc.id)}
-                              className="text-green-600 hover:text-green-900"
+                              className="text-green-600 hover:text-green-900 mr-3"
                             >
                               Send to Parents
                             </button>
                           )}
                           {rc.sent_to_parents && (
-                            <span className="text-gray-400 text-xs">Sent {new Date(rc.sent_at!).toLocaleDateString()}</span>
+                            <span className="text-gray-400 text-xs mr-3">Sent {new Date(rc.sent_at!).toLocaleDateString()}</span>
                           )}
+                          <button
+                            onClick={() => deleteReportCard(rc.id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Delete report card"
+                          >
+                            <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -884,6 +919,15 @@ export default function AdminPanel() {
                             Send to Parents
                           </button>
                         )}
+                        <button
+                          onClick={() => deleteReportCard(rc.id)}
+                          className="w-full py-2.5 px-4 bg-red-50 text-red-600 text-sm font-medium rounded hover:bg-red-100 min-h-[44px] flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}

@@ -74,7 +74,9 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
                 src={video.public_url}
                 className="w-full h-full object-cover"
                 preload="metadata"
-                crossOrigin="anonymous"
+                playsInline
+                muted
+                onError={(e) => console.error('Video thumbnail error:', e.currentTarget.error?.code, e.currentTarget.error?.message, video.public_url)}
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-colors">
                 <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
@@ -115,9 +117,10 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
               src={selectedVideo.public_url}
               controls
               autoPlay
+              playsInline
               className="w-full rounded-lg"
-              crossOrigin="anonymous"
               onClick={(e) => e.stopPropagation()}
+              onError={(e) => console.error('Video playback error:', e.currentTarget.error?.code, e.currentTarget.error?.message)}
             />
             <button
               onClick={() => setSelectedVideo(null)}

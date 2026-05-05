@@ -1,18 +1,28 @@
+import { useState, useEffect } from 'react'
 import type { Skill } from '../../types'
 
 interface SkillSliderProps {
   skill: Skill
   value: number | string | null
   onChange: (value: number | string | null) => void
+  notes?: string
+  onNotesChange?: (notes: string) => void
 }
 
 // Categories that should use Yes/No or Recommended instead of 1-4 slider
 const yesNoCategories = ['Programs for Next Season']
 const recommendedCategories = ['Suggested Training']
 
-export default function SkillSlider({ skill, value, onChange }: SkillSliderProps) {
+export default function SkillSlider({ skill, value, onChange, notes, onNotesChange }: SkillSliderProps) {
   const isSkipped = value === null
-  
+  const [noteOpen, setNoteOpen] = useState(!!notes)
+
+  useEffect(() => {
+    if (notes && notes.trim()) {
+      setNoteOpen(true)
+    }
+  }, [notes])
+
   // Check if this skill should use Yes/No (based on skill name containing category)
   const skillNameLower = skill.name.toLowerCase()
   const skillIdLower = skill.id.toLowerCase()
@@ -69,6 +79,35 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
         {skill.description && (
           <p className="text-xs text-gray-500 mt-2">{skill.description}</p>
         )}
+        <div className="mt-2">
+          {!noteOpen ? (
+            <button
+              onClick={() => setNoteOpen(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              Add note
+            </button>
+          ) : (
+            <div className="relative">
+              <textarea
+                value={notes || ''}
+                onChange={(e) => onNotesChange?.(e.target.value)}
+                placeholder="Add a note..."
+                rows={2}
+                className="w-full text-xs p-2 pr-6 border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {(!notes || !notes.trim()) && (
+                <button
+                  onClick={() => setNoteOpen(false)}
+                  className="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -97,6 +136,35 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
         {skill.description && (
           <p className="text-xs text-gray-500 mt-2">{skill.description}</p>
         )}
+        <div className="mt-2">
+          {!noteOpen ? (
+            <button
+              onClick={() => setNoteOpen(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              Add note
+            </button>
+          ) : (
+            <div className="relative">
+              <textarea
+                value={notes || ''}
+                onChange={(e) => onNotesChange?.(e.target.value)}
+                placeholder="Add a note..."
+                rows={2}
+                className="w-full text-xs p-2 pr-6 border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {(!notes || !notes.trim()) && (
+                <button
+                  onClick={() => setNoteOpen(false)}
+                  className="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -104,6 +172,7 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
   const isAttendance = skillIdLower === 'attendance' || skillIdLower.startsWith('attendance-')
   const isAttitudeEngagement = skillIdLower === 'effort-participation'
   const isParkSafety = skillIdLower === 'park-safety'
+  const isTerrain = skillIdLower === 'moguls-terrain'
 
   // Regular 0-4 slider for other skills
   return (
@@ -152,14 +221,43 @@ export default function SkillSlider({ skill, value, onChange }: SkillSliderProps
             <span>4</span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span className="text-left">N/A</span>
-            <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety ? '' : 'Tried it'}</span>
+            <span className="text-left">{isTerrain ? 'Green' : 'N/A'}</span>
+            <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety || isTerrain ? '' : 'Tried it'}</span>
+            <span>{isTerrain ? 'Green | Blue' : ''}</span>
             <span></span>
-            <span></span>
-            <span className="text-right">{isAttendance ? '100%' : isAttitudeEngagement ? 'Stoked' : isParkSafety ? 'Safe' : 'Stomped it'}</span>
+            <span className="text-right">{isAttendance ? '100%' : isAttitudeEngagement ? 'Stoked' : isParkSafety ? 'Safe' : isTerrain ? 'Blue' : 'Stomped it'}</span>
           </div>
         </>
       )}
+      <div className="mt-2">
+        {!noteOpen ? (
+          <button
+            onClick={() => setNoteOpen(true)}
+            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            Add note
+          </button>
+        ) : (
+          <div className="relative">
+            <textarea
+              value={notes || ''}
+              onChange={(e) => onNotesChange?.(e.target.value)}
+              placeholder="Add a note..."
+              rows={2}
+              className="w-full text-xs p-2 pr-6 border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {(!notes || !notes.trim()) && (
+              <button
+                onClick={() => setNoteOpen(false)}
+                className="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

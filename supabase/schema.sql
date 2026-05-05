@@ -162,6 +162,17 @@ create policy "Admins can update report cards"
     )
   );
 
+-- Admins can delete report cards
+create policy "Admins can delete report cards"
+  on report_cards for delete
+  to authenticated
+  using (
+    exists (
+      select 1 from coaches c 
+      where c.id = auth.uid() and c.is_admin = true
+    )
+  );
+
 -- Evaluation Templates table
 create table if not exists evaluation_templates (
   id uuid default gen_random_uuid() primary key,
@@ -321,6 +332,15 @@ create policy "Admins can manage all videos"
       where c.id = auth.uid() and c.is_admin = true
     )
   );
+
+-- Storage bucket RLS policies for public file access
+create policy "Public video access"
+  on storage.objects for select
+  using (bucket_id = 'athlete-videos');
+
+create policy "Public photo access"
+  on storage.objects for select
+  using (bucket_id = 'athlete-photos');
 
 -- Trigger to automatically create coach profile on user signup
 create or replace function public.handle_new_user()

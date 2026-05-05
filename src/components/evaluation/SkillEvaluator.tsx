@@ -56,7 +56,8 @@ export default function SkillEvaluator({
     skills.map(skill => ({
       skill_id: skill.id,
       skill_name: skill.name,
-      score: isToggleSkill(skill) ? null : 0  // Toggle skills default to null, regular skills default to 0
+      score: isToggleSkill(skill) ? null : 0,  // Toggle skills default to null, regular skills default to 0
+      notes: ''
     }))
   )
   const [notes, setNotes] = useState('')
@@ -71,6 +72,12 @@ export default function SkillEvaluator({
   const updateScore = useCallback((skillId: string, value: number | string | null) => {
     setScores(prev => prev.map(s => 
       s.skill_id === skillId ? { ...s, score: value } : s
+    ))
+  }, [])
+
+  const updateNotes = useCallback((skillId: string, notes: string) => {
+    setScores(prev => prev.map(s => 
+      s.skill_id === skillId ? { ...s, notes } : s
     ))
   }, [])
 
@@ -183,6 +190,7 @@ export default function SkillEvaluator({
         categories={categories}
         scores={scores}
         onScoreChange={updateScore}
+        onNotesChange={updateNotes}
         categoryNotes={categoryNotes}
         onCategoryNoteChange={handleCategoryNoteChange}
       />
