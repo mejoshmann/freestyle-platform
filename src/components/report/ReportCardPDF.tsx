@@ -311,24 +311,25 @@ export async function generateReportCardPDF(
         const skillX = scoresColX + col * colWidth;
         const skillY = rowStartY;
 
+        const isSpinSkill = skill.skill_id.endsWith('-spins');
         const isAttendance = skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
         const isTerrain = skill.skill_id === "moguls-terrain";
-        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isSpinSkill ? skill.score.toString() : isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
 
-        // Skill name
-        doc.setFontSize(8);
-        doc.setFont("Montserrat", "normal");
-        doc.setTextColor(...darkGray);
-        let displayName = skill.skill_name;
+        // Skill name - use singular form for spin skills ("Left Spin" instead of "Left Spins")
+        let displayName = isSpinSkill ? skill.skill_name.replace(/ Spins$/, ' Spin') : skill.skill_name;
         const maxNameWidth = colWidth - 12;
         while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 3) {
           displayName = displayName.slice(0, -1);
         }
         if (displayName !== skill.skill_name) displayName += "..";
+        doc.setFontSize(8);
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...darkGray);
         doc.text(displayName, skillX, skillY);
 
         // Score value right-aligned within column
-        doc.setFont("Montserrat", "bold");
+        doc.setFont("Montserrat", "normal");
         doc.setTextColor(...black);
         doc.text(scoreText, skillX + colWidth - 8, skillY);
 
@@ -360,8 +361,8 @@ export async function generateReportCardPDF(
         ? skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined)
         : skills;
 
-      // Use 3 columns for Air Tricks with many skills (Freestylerz), 2 for smaller lists
-      const catCols = ((category === "Air Tricks" || category === "Terrain Park") && displaySkills.length > 4) ? 3 : numCols;
+      // Use 2 columns for all categories
+      const catCols = numCols;
       const catColWidth = (pageWidth - margin - scoresColX) / catCols;
 
       doc.setFontSize(8);
@@ -375,14 +376,14 @@ export async function generateReportCardPDF(
         const skillX = scoresColX + col * catColWidth;
         const skillY = rowStartY + row * skillLineHeight;
 
+        // Skill name (truncated if needed)
+        const isSpinSkill = skill.skill_id.endsWith('-spins');
         const isAttendance = skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
         const isTerrain = skill.skill_id === "moguls-terrain";
-        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isSpinSkill ? skill.score.toString() : isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
         
-        // Skill name (truncated if needed)
-        doc.setFont("Montserrat", "normal");
-        doc.setTextColor(...darkGray);
-        let displayName = skill.skill_name;
+        // Skill name - use singular form for spin skills ("Left Spin" instead of "Left Spins")
+        let displayName = isSpinSkill ? skill.skill_name.replace(/ Spins$/, ' Spin') : skill.skill_name;
         // Truncate long names to fit column
         const maxNameWidth = catColWidth - 12;
         while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 3) {
@@ -392,7 +393,7 @@ export async function generateReportCardPDF(
         doc.text(displayName, skillX, skillY);
 
         // Score value right-aligned within column
-        doc.setFont("Montserrat", "bold");
+        doc.setFont("Montserrat", "normal");
         doc.setTextColor(...black);
         doc.text(scoreText, skillX + catColWidth - 8, skillY);
       });

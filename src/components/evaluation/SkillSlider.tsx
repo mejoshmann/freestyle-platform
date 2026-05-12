@@ -27,6 +27,9 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
   const skillNameLower = skill.name.toLowerCase()
   const skillIdLower = skill.id.toLowerCase()
   
+  const isSpinSkill = skill.id.endsWith('-spins')
+  const spinDegrees = ['180', '360', '540', '720']
+
   const isYesNoSkill = yesNoCategories.some(cat => {
     const catLower = cat.toLowerCase()
     return skillNameLower.includes(catLower) || 
@@ -135,6 +138,81 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
         </div>
         {skill.description && (
           <p className="text-xs text-gray-500 mt-2">{skill.description}</p>
+        )}
+        <div className="mt-2">
+          {!noteOpen ? (
+            <button
+              onClick={() => setNoteOpen(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              Add note
+            </button>
+          ) : (
+            <div className="relative">
+              <textarea
+                value={notes || ''}
+                onChange={(e) => onNotesChange?.(e.target.value)}
+                placeholder="Add a note..."
+                rows={2}
+                className="w-full text-xs p-2 pr-6 border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {(!notes || !notes.trim()) && (
+                <button
+                  onClick={() => setNoteOpen(false)}
+                  className="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (isSpinSkill) {
+    // Degree selection buttons for grouped spin skills
+    const selectedDegree = typeof value === 'string' ? value : null
+    return (
+      <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+        <div className="flex justify-between items-center mb-2 gap-2">
+          <label className={`text-xs sm:text-base font-medium flex-1 min-w-0 ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+            {skill.name}
+          </label>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => onChange(isSkipped ? '180' : null)}
+              className={`text-xs px-2 py-1 rounded ${
+                isSkipped 
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              {isSkipped ? 'Enable' : 'Skip'}
+            </button>
+          </div>
+        </div>
+        {skill.description && !isSkipped && (
+          <p className="text-xs text-gray-500 mb-3">{skill.description}</p>
+        )}
+        {!isSkipped && (
+          <div className="flex gap-2">
+            {spinDegrees.map((degree) => (
+              <button
+                key={degree}
+                onClick={() => onChange(selectedDegree === degree ? null : degree)}
+                className={`flex-1 py-2 sm:py-2.5 rounded-lg font-bold text-sm sm:text-base transition-colors ${
+                  selectedDegree === degree
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
+                }`}
+              >
+                {degree}
+              </button>
+            ))}
+          </div>
         )}
         <div className="mt-2">
           {!noteOpen ? (

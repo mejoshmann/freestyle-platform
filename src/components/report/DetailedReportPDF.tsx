@@ -43,8 +43,10 @@ function getScoreDisplay(skill: SkillScore): string {
   const isAttendance =
     skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
   const isTerrain = skill.skill_id === "moguls-terrain";
+  const isSpinSkill = skill.skill_id.endsWith("-spins");
   if (skill.score === 0) return "N/A";
   if (skill.score == null) return "-";
+  if (isSpinSkill) return skill.score.toString();
   if (isAttendance) return `${(skill.score as number) * 25}%`;
   if (isTerrain)
     return (skill.score as number) <= 2 ? "Green" : "Blue";
@@ -294,12 +296,14 @@ export async function generateDetailedReport(
         }
         const x = skillsColX + col * colWidth;
         const scoreText = getScoreDisplay(skill);
+        const isSpinSkill = skill.skill_id.endsWith("-spins");
+        const displayName = isSpinSkill ? skill.skill_name.replace(/ Spins$/, " Spin") : skill.skill_name;
         doc.setFontSize(8);
         doc.setFont("Montserrat", "normal");
         doc.setTextColor(...black);
-        doc.text(skill.skill_name, x, currentY);
+        doc.text(displayName, x, currentY);
         doc.setFont("Montserrat", "bold");
-        const nw = doc.getTextWidth(skill.skill_name);
+        const nw = doc.getTextWidth(displayName);
         doc.text(` ${scoreText}`, x + nw, currentY);
       });
       // Move past the last row
