@@ -280,8 +280,13 @@ export async function generateReportCardPDF(
   let currentRowY = skillsStartY;
 
   // Draw each category with grid-aligned scores
-  categories.forEach((category) => {
+  categories.forEach((category, catIndex) => {
     const skills = groupedSkills[category] || [];
+
+    // Add extra gap before each heading for FundamentalZ (fewer metrics, more space available)
+    if (programType === 'fundamentalz' && catIndex > 0) {
+      currentRowY += 3;
+    }
 
     // Category name on the left
     doc.setFontSize(10);
@@ -451,8 +456,9 @@ export async function generateReportCardPDF(
 
   // Only show bottom section if there's something to display
   if (hasTrainingOrPrograms || hasCoachNotes) {
-    // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
-    let bottomY = currentRowY + 5;
+    // For FundamentalZ (fewer metrics), ensure bottom section doesn't start too high
+    const minBottomY = programType === 'fundamentalz' ? thirdPage * 2 + 6 : currentRowY + 5;
+    let bottomY = Math.max(currentRowY + 5, minBottomY);
 
     // Coach Notes section (above What's Next)
     if (hasCoachNotes) {

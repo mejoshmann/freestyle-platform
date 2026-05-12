@@ -36,6 +36,7 @@ interface SkillEvaluatorProps {
   athleteName: string
   skills: Skill[]
   categories?: TemplateCategory[]
+  programType?: string
   onSave: (scores: SkillScore[], notes: string, groupName: string, categoryNotes?: Record<string, string>, voiceNotes?: string[]) => void
   onCancel: () => void
   onBackToRoster?: () => void
@@ -46,6 +47,7 @@ export default function SkillEvaluator({
   athleteName, 
   skills, 
   categories, 
+  programType,
   onSave, 
   onCancel, 
   onBackToRoster 
@@ -209,19 +211,21 @@ export default function SkillEvaluator({
         onCategoryNoteChange={handleCategoryNoteChange}
       />
 
-      {/* Goals for Next Season */}
-      <div className="mb-4 sm:mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Goals for Next Season
-        </label>
-        <textarea
-          value={categoryNotes['Goals for Next Season'] || ''}
-          onChange={(e) => handleCategoryNoteChange('Goals for Next Season', e.target.value)}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="What are the goals and focus areas for next season?"
-        />
-      </div>
+      {/* Goals for Next Season - only for Freestylerz */}
+      {programType !== 'fundamentalz' && (
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Goals for Next Season
+          </label>
+          <textarea
+            value={categoryNotes['Goals for Next Season'] || ''}
+            onChange={(e) => handleCategoryNoteChange('Goals for Next Season', e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="What are the goals and focus areas for next season?"
+          />
+        </div>
+      )}
 
       {/* Desktop Actions */}
       <DesktopActions 

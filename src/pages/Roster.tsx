@@ -508,6 +508,7 @@ export default function Roster() {
               athleteName={selectedAthlete.full_name}
               skills={selectedMetricsSet?.skills || allSkills}
               categories={selectedMetricsSet?.categories}
+              programType={selectedProgramType || undefined}
               onSave={handleSaveEvaluation}
               onCancel={() => {
                 setSelectedAthlete(null)

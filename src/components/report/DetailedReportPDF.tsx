@@ -417,22 +417,24 @@ export async function generateDetailedReport(
       });
     }
 
-    // Goals for Next Season
-    currentY += 4;
-    currentY = checkPageBreak(doc, currentY, 15, margin, pageHeight);
-    doc.setFontSize(10);
-    doc.setFont("Montserrat", "bold");
-    doc.setTextColor(...black);
-    doc.text("Goals for Next Season:", categoryColX, currentY);
-    currentY += 5;
+    // Goals for Next Season - only for Freestylerz
+    if (programType !== 'fundamentalz') {
+      currentY += 4;
+      currentY = checkPageBreak(doc, currentY, 15, margin, pageHeight);
+      doc.setFontSize(10);
+      doc.setFont("Montserrat", "bold");
+      doc.setTextColor(...black);
+      doc.text("Goals for Next Season:", categoryColX, currentY);
+      currentY += 5;
 
-    if (categoryNotes && categoryNotes['Goals for Next Season'] && categoryNotes['Goals for Next Season'].trim()) {
-      doc.setFontSize(9);
-      doc.setFont("Montserrat", "normal");
-      doc.setTextColor(...darkGray);
-      const wrappedGoals = doc.splitTextToSize(categoryNotes['Goals for Next Season'].trim(), contentWidth - 10);
-      doc.text(wrappedGoals, margin + 5, currentY);
-      currentY += wrappedGoals.length * 4 + 2;
+      if (categoryNotes && categoryNotes['Goals for Next Season'] && categoryNotes['Goals for Next Season'].trim()) {
+        doc.setFontSize(9);
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...darkGray);
+        const wrappedGoals = doc.splitTextToSize(categoryNotes['Goals for Next Season'].trim(), contentWidth - 10);
+        doc.text(wrappedGoals, margin + 5, currentY);
+        currentY += wrappedGoals.length * 4 + 2;
+      }
     }
   }
 
