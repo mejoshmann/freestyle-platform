@@ -405,10 +405,10 @@ export default function Roster() {
                   setShowProgramSelector(false)
                   setShowMetricsSelector(true)
                 }}
-                className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-left group"
+                className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-center group"
               >
-                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">FUNdamentalz - Girlstylerz / Night Riders</h3>
-                <p className="text-sm text-gray-400 mt-1">Foundation skills program</p>
+                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">FUNdamentalz Evaluation</h3>
+                <p className="text-sm text-gray-400 mt-1">FUNdamentalz / Girlstylerz / Night Riders</p>
               </button>
 
               {/* Freestylerz / Girlstylerz / Night Riders */}
@@ -418,10 +418,10 @@ export default function Roster() {
                   setShowProgramSelector(false)
                   setShowMetricsSelector(true)
                 }}
-                className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-left group"
+                className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-center group"
               >
-                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">Freestylerz - Girlstylerz / Night Riders</h3>
-                <p className="text-sm text-gray-400 mt-1">Advanced freestyle programs</p>
+                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">Freestylerz Evaluation</h3>
+                <p className="text-sm text-gray-400 mt-1">Freestylerz / Girlstylerz / Night Riders</p>
               </button>
             </div>
 
@@ -508,7 +508,6 @@ export default function Roster() {
               athleteName={selectedAthlete.full_name}
               skills={selectedMetricsSet?.skills || allSkills}
               categories={selectedMetricsSet?.categories}
-              programType={selectedProgramType || undefined}
               onSave={handleSaveEvaluation}
               onCancel={() => {
                 setSelectedAthlete(null)

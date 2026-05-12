@@ -303,10 +303,13 @@ export async function generateReportCardPDF(
     } else if (category === "Freeride" || category === "Moguls / Bumps") {
       // Special rendering with descriptions
 
+      // Filter out N/A (score 0) skills
+      const displaySkills = skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined);
+
       let rowStartY = currentRowY;
       let currentRowMaxHeight = skillLineHeight;
 
-      skills.forEach((skill, index) => {
+      displaySkills.forEach((skill, index) => {
         const col = index % numCols;
         const skillX = scoresColX + col * colWidth;
         const skillY = rowStartY;
@@ -348,7 +351,7 @@ export async function generateReportCardPDF(
         currentRowMaxHeight = Math.max(currentRowMaxHeight, skillHeight);
 
         // Advance to next row after last column or last skill
-        if (col === numCols - 1 || index === skills.length - 1) {
+        if (col === numCols - 1 || index === displaySkills.length - 1) {
           rowStartY += currentRowMaxHeight;
           currentRowMaxHeight = skillLineHeight;
         }
@@ -357,9 +360,7 @@ export async function generateReportCardPDF(
       currentRowY = rowStartY - skillLineHeight;
     } else {
       // For Air Tricks, filter out unevaluated skills (score 0 / N/A / null)
-      const displaySkills = category === "Air Tricks"
-        ? skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined)
-        : skills;
+      const displaySkills = skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined);
 
       // Use 2 columns for all categories
       const catCols = numCols;
