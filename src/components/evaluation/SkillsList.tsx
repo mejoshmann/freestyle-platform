@@ -66,12 +66,13 @@ export default function SkillsList({ skills, categories, scores, onScoreChange, 
               )
             })}
           </div>
-          {category.name !== 'Suggested Training' && category.name !== 'Programs for Next Season' && (
+          {category.name !== 'Suggested Training' && category.name !== 'Programs for Next Season' && category.name !== 'Attendance' && (
             <textarea
               value={categoryNotes[category.name] || ''}
               onChange={(e) => onCategoryNoteChange(category.name, e.target.value)}
               placeholder={`Notes for ${category.name}...`}
-              rows={2}
+              rows={1}
+              maxLength={99}
               className="w-full mt-2 p-2 text-sm border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
           )}

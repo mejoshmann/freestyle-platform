@@ -14,9 +14,6 @@ export default function EvalHeader({ athleteName, evaluatedCount, onClose }: Eva
       </div>
       <div className="ml-3 sm:ml-4 flex-1">
         <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{athleteName}</h2>
-        <p className="text-sm text-gray-500">
-          {evaluatedCount} skills evaluated
-        </p>
       </div>
       {onClose && (
         <button

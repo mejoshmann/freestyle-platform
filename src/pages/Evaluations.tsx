@@ -3,16 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import MediaGallery from '../components/media/MediaGallery'
-import type { Athlete } from '../types'
+import { downloadDetailedReport } from '../components/report/DetailedReportPDF'
+import type { Athlete, SkillScore } from '../types'
 
 interface Evaluation {
   id: string
   athlete_id: string
   coach_id: string
-  skill_scores: { skill_id: string; skill_name: string; score: number | string | null }[]
+  skill_scores: SkillScore[]
   notes: string
   group_name?: string
   program_type?: string
+  category_notes?: Record<string, string>
   created_at: string
 }
 
@@ -130,12 +132,12 @@ export default function Evaluations() {
                   <div className="flex items-center gap-2">
                     {evaluation.program_type === 'fundamentalz' && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        FundamentalZ
+                        FUNdamentalz
                       </span>
                     )}
                     {evaluation.program_type === 'freestylerz' && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Freestylerz / Girlstylerz / Night Riders
+                        Freestylerz - Girlstylerz / Night Riders
                       </span>
                     )}
                     {evaluation.created_at && (
@@ -216,14 +218,40 @@ export default function Evaluations() {
                   </div>
                 )}
 
-                {/* Report Card Button - Admin Only */}
+                {/* Report Card Buttons - Admin Only */}
                 {coach?.is_admin && (
-                  <button
-                    onClick={() => alert('Report card generation coming soon!')}
-                    className="w-full py-2 px-4 border border-blue-300 text-blue-600 rounded hover:bg-blue-50"
-                  >
-                    Generate Report Card
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => alert('Report card generation coming soon!')}
+                      className="flex-1 py-2 px-4 border border-blue-300 text-blue-600 rounded hover:bg-blue-50"
+                    >
+                      Generate Report Card
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const currentYear = new Date().getFullYear()
+                          const season = `${currentYear - 1}/${currentYear.toString().slice(-2)}`
+                          await downloadDetailedReport({
+                            athlete,
+                            coachName: coach?.full_name || 'Coach',
+                            skillScores: evaluation.skill_scores || [],
+                            notes: evaluation.notes || '',
+                            season,
+                            groupName: evaluation.group_name,
+                            programType: evaluation.program_type,
+                            categoryNotes: evaluation.category_notes,
+                          })
+                        } catch (e) {
+                          console.error('Failed to generate detailed report:', e)
+                          alert('Failed to generate detailed report. Please try again.')
+                        }
+                      }}
+                      className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                    >
+                      Detailed Report
+                    </button>
+                  </div>
                 )}
               </div>
             ))}

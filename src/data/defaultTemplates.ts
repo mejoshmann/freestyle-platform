@@ -101,7 +101,27 @@ const sharedTerrainPark: TemplateDefinition = {
   description: 'Terrain Park evaluation',
   skills: [
     { id: 'park-safety', name: 'Safety', description: 'Safety awareness and etiquette' },
-    { id: 'park-boxes', name: 'Boxes', description: 'Box slide skills' },
+    { id: 'park-left-box', name: 'Left Foot Box Slide', description: 'Left foot box slide' },
+    { id: 'park-right-box', name: 'Right Foot Box Slide', description: 'Right foot box slide' },
+    { id: 'park-left-tube', name: 'Left Foot Tube Slide', description: 'Left foot tube slide' },
+    { id: 'park-right-tube', name: 'Right Foot Tube Slide', description: 'Right foot tube slide' },
+    { id: 'park-switch-box', name: 'Switch Box Slide', description: 'Switch box slide' },
+    { id: 'park-switch-tube', name: 'Switch Tube Slide', description: 'Switch tube slide' },
+    { id: 'park-front-270-out', name: 'Front 270 Out', description: 'Front 270 out' },
+    { id: 'park-back-270-out', name: 'Back 270 Out', description: 'Back 270 out' },
+    { id: 'park-switch-up', name: 'Switch Up', description: 'Switch up' },
+    { id: 'park-270-on', name: '270 On', description: '270 on' },
+  ],
+}
+
+const fundamentalzTerrainPark: TemplateDefinition = {
+  name: 'Terrain Park',
+  description: 'Terrain Park evaluation',
+  skills: [
+    { id: 'park-safety', name: 'Safety', description: 'Safety awareness and etiquette' },
+    { id: 'park-box-5050', name: 'Box Slide 50/50', description: 'Box slide 50/50' },
+    { id: 'park-box-sideways', name: 'Box Slide Sideways', description: 'Box slide sideways' },
+    { id: 'park-box-switch-5050', name: 'Switch Box Slide 50/50', description: 'Switch box slide 50/50' },
     { id: 'park-rails', name: 'Tubes', description: 'Tube slide skills' },
     { id: 'park-wall', name: 'Hip / Quarter Pipe / Wall Ride', description: 'Hip, quarter pipe and wall ride skills' },
   ],
@@ -157,7 +177,6 @@ const freestylerzFreeride: TemplateDefinition = {
     { id: 'freeski-timing-coordination', name: 'Timing & Coordination', description: 'Pole plant consistently, 4 phases of the turn' },
     { id: 'freeski-freeride-style', name: 'Freeride Style / Impression', description: 'Overall freeride style and impression' },
     { id: 'freeski-switch', name: 'Switch Skiing', description: 'Comfort on Greens vs Blues, Ski whole run switch safely, Vision in right place' },
-    { id: 'freeski-switch-stops', name: 'Controlled Stops', description: 'Controlled stops while skiing switch' },
     { id: 'freeski-spinning', name: 'Spinning on Snow', description: '360s and spins on flat snow' },
     { id: 'freeski-control', name: 'Skiing with Control', description: 'Overall control and style' },
   ],
@@ -171,7 +190,7 @@ export const fundamentalzTemplates: TemplateDefinition[] = [
   fundamentalzMoguls,
   sharedAirSkills,
   fundamentalzAirTricks,
-  sharedTerrainPark,
+  fundamentalzTerrainPark,
   sharedSuggestedTraining,
   sharedProgramsNextSeason,
 ]

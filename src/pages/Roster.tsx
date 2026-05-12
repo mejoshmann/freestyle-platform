@@ -407,7 +407,7 @@ export default function Roster() {
                 }}
                 className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-left group"
               >
-                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">FundamentalZ</h3>
+                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">FUNdamentalz - Girlstylerz / Night Riders</h3>
                 <p className="text-sm text-gray-400 mt-1">Foundation skills program</p>
               </button>
 
@@ -420,7 +420,7 @@ export default function Roster() {
                 }}
                 className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-left group"
               >
-                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">Freestylerz / Girlstylerz / Night Riders</h3>
+                <h3 className="font-bold text-white text-lg group-hover:text-[#ED4137] transition-colors">Freestylerz - Girlstylerz / Night Riders</h3>
                 <p className="text-sm text-gray-400 mt-1">Advanced freestyle programs</p>
               </button>
             </div>

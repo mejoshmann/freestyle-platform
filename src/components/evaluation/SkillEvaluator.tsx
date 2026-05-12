@@ -184,6 +184,20 @@ export default function SkillEvaluator({
         <p className="text-xs text-gray-500 mt-1">Optional: Enter a custom name for your group</p>
       </div>
 
+      {/* Athlete Evaluation */}
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Athlete Evaluation
+        </label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="How did the athlete do this season? What highlights or struggles did they face?"
+        />
+      </div>
+
       {/* Skills by Category */}
       <SkillsList 
         skills={skills}
@@ -195,17 +209,17 @@ export default function SkillEvaluator({
         onCategoryNoteChange={handleCategoryNoteChange}
       />
 
-      {/* Notes */}
+      {/* Goals for Next Season */}
       <div className="mb-4 sm:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Notes
+          Goals for Next Season
         </label>
         <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          value={categoryNotes['Goals for Next Season'] || ''}
+          onChange={(e) => handleCategoryNoteChange('Goals for Next Season', e.target.value)}
           rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Add any notes about this evaluation..."
+          placeholder="What are the goals and focus areas for next season?"
         />
       </div>
 

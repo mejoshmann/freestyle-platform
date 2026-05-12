@@ -59,12 +59,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
   }
 
   if (media.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p className="text-lg mb-2">No media yet</p>
-        <p className="text-sm">Capture photos or videos during evaluations to see them here</p>
-      </div>
-    )
+    return null
   }
 
   return (

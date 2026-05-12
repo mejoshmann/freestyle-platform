@@ -18,6 +18,7 @@ interface ReportCardData {
   date: string;
   groupName?: string;
   programType?: string;
+  categoryNotes?: Record<string, string>;
 }
 
 async function compressImage(
@@ -97,7 +98,7 @@ export async function generateReportCardPDF(
 ): Promise<string> {
   const doc = new jsPDF({ compress: true });
   registerMontserrat(doc);
-  const { athlete, coachName, skillScores, notes, season, groupName, programType } = data;
+  const { athlete, coachName, skillScores, notes, season, groupName, programType, categoryNotes } = data;
 
   // Build skill description lookup from templates
   const templates = programType === 'fundamentalz' ? fundamentalzTemplates : freestylerzTemplates
@@ -130,8 +131,8 @@ export async function generateReportCardPDF(
     const skierLogoBase64 = await loadSkierLogoAsBase64();
     if (skierLogoBase64) {
       const skierSize = 80;
-      const centerX = (pageWidth - skierSize) / 1.15;
-      const centerY = pageHeight - 265;
+      const centerX = (pageWidth - skierSize) / 1.10;
+      const centerY = pageHeight - 275;
       doc.addImage(
         skierLogoBase64,
         "PNG",
@@ -149,7 +150,7 @@ export async function generateReportCardPDF(
   const logoBase64 = await loadLogoAsBase64();
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, "JPEG", margin, 8, 50, 50);
+      doc.addImage(logoBase64, "JPEG", margin, 4, 50, 50);
     } catch (_e) {
       console.log("Logo failed to render:", _e);
     }
@@ -165,28 +166,37 @@ export async function generateReportCardPDF(
   doc.setFontSize(30);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...brandBlue);
-  doc.text("WELL DONE!", rightX, 30);
+  doc.text("WELL DONE!", rightX, 24);
 
   // Athlete, Coach, Season and Group Name (middle of top third)
-  const topThirdMiddle = thirdPage / 2 + 16;
+  const topThirdMiddle = thirdPage / 2 + 12;
   doc.setFontSize(14);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...brandBlue);
   doc.text("ATHLETE PROGRESS REPORT", margin, topThirdMiddle - 8);
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont("Montserrat", "bold");
   doc.setTextColor(...black);
   doc.text(`Athlete: ${athlete.full_name}`, margin, topThirdMiddle);
   doc.setFontSize(10);
   doc.setFont("Montserrat", "normal");
   doc.setTextColor(...darkGray);
-  doc.text(`Coach: ${coachName}`, margin, topThirdMiddle + 6);
+  doc.text(`Coach: ${coachName}`, margin, topThirdMiddle + 5);
   doc.text(
     `Group: ${groupName || athlete.group_name || "N/A"}`,
     margin,
-    topThirdMiddle + 12,
+    topThirdMiddle + 9,
   );
-  doc.text(`Season: ${season}`, margin, topThirdMiddle + 18);
+  doc.text(`Season: ${season}`, margin, topThirdMiddle + 13);
+
+  // Athlete Evaluation notes under Season
+  if (notes && notes.trim()) {
+    doc.setFontSize(8);
+    doc.setFont("Montserrat", "normal");
+    doc.setTextColor(...darkGray);
+    const wrappedEvalNotes = doc.splitTextToSize(notes.trim(), pageWidth - margin * 2);
+    doc.text(wrappedEvalNotes, margin, topThirdMiddle + 18);
+  }
 
   // Program type removed from PDF per user request
 
@@ -208,7 +218,7 @@ export async function generateReportCardPDF(
   doc.setFont("Montserrat", "normal");
   doc.setTextColor(...darkGray);
   doc.text("0- N/A | 1- Tried It | 2- Partial Demonstration | 3- Consistent Demonstration | 4- Stomped It!", leftX, currentY);
-  currentY += lineHeight + 3;
+  currentY += 5;
 
   // Group skill scores by category
   const groupedSkills: Record<string, SkillScore[]> = {};
@@ -251,15 +261,15 @@ export async function generateReportCardPDF(
     "Athlete Participation",
     "Freeride",
     "Moguls / Bumps",
-    "Air Tricks",
     "Air Skills",
+    "Air Tricks",
     "Terrain Park",
   ];
   const skillsStartY = currentY;
 
   // Layout constants - reduced spacing
   const categoryRowHeight = 6;
-  const skillLineHeight = 4;
+  const skillLineHeight = 4.2;
 
   // Column positions - category on left, skills in a grid on the right
   const categoryColX = leftX;
@@ -290,7 +300,7 @@ export async function generateReportCardPDF(
       const descLineHeight = 2.5;
 
       let rowStartY = currentRowY;
-      let currentRowMaxHeight = skillLineHeight * 1.5;
+      let currentRowMaxHeight = skillLineHeight;
 
       skills.forEach((skill, index) => {
         const col = index % numCols;
@@ -318,28 +328,28 @@ export async function generateReportCardPDF(
         doc.setTextColor(...black);
         doc.text(scoreText, skillX + colWidth - 8, skillY);
 
-        // Description on next line
-        const description = skillDescriptions[skill.skill_id];
-        let skillHeight = skillLineHeight * 1.5;
-        if (description) {
-          doc.setFontSize(6);
-          doc.setFont("Montserrat", "normal");
-          doc.setTextColor(...darkGray);
-          const wrapped = doc.splitTextToSize(description, colWidth - 12);
-          doc.text(wrapped, skillX, skillY + 3);
-          skillHeight = 3 + wrapped.length * descLineHeight + 1;
-        }
+        // Description removed - only shown in coach evaluation UI
+        // const description = skillDescriptions[skill.skill_id];
+        let skillHeight = skillLineHeight;
+        // if (description) {
+        //   doc.setFontSize(6);
+        //   doc.setFont("Montserrat", "normal");
+        //   doc.setTextColor(...darkGray);
+        //   const wrapped = doc.splitTextToSize(description, colWidth - 12);
+        //   doc.text(wrapped, skillX, skillY + 3);
+        //   skillHeight = 3 + wrapped.length * descLineHeight + 1;
+        // }
 
         currentRowMaxHeight = Math.max(currentRowMaxHeight, skillHeight);
 
         // Advance to next row after last column or last skill
         if (col === numCols - 1 || index === skills.length - 1) {
           rowStartY += currentRowMaxHeight;
-          currentRowMaxHeight = skillLineHeight * 1.5;
+          currentRowMaxHeight = skillLineHeight;
         }
       });
 
-      currentRowY = rowStartY;
+      currentRowY = rowStartY - skillLineHeight;
     } else {
       // For Air Tricks, filter out unevaluated skills (score 0 / N/A / null)
       const displaySkills = category === "Air Tricks"
@@ -347,7 +357,7 @@ export async function generateReportCardPDF(
         : skills;
 
       // Use 3 columns for Air Tricks with many skills (Freestylerz), 2 for smaller lists
-      const catCols = (category === "Air Tricks" && displaySkills.length > 8) ? 3 : numCols;
+      const catCols = ((category === "Air Tricks" || category === "Terrain Park") && displaySkills.length > 4) ? 3 : numCols;
       const catColWidth = (pageWidth - margin - scoresColX) / catCols;
 
       doc.setFontSize(8);
@@ -428,15 +438,48 @@ export async function generateReportCardPDF(
   // Check if there's anything to show in What's Next
   const hasTrainingOrPrograms =
     selectedTraining.length > 0 || selectedPrograms.length > 0;
-  const hasGoals = notes && notes.trim().length > 0;
 
-  // Only show What's Next section if there's something to display
-  if (hasTrainingOrPrograms || hasGoals) {
+  // Collect all coach notes
+  const allCoachNotes: { category: string; note: string }[] = [];
+  if (categoryNotes) {
+    categories.forEach((cat) => {
+      if (categoryNotes[cat] && categoryNotes[cat].trim()) {
+        allCoachNotes.push({ category: cat, note: categoryNotes[cat].trim() });
+      }
+    });
+  }
+  const hasCoachNotes = allCoachNotes.length > 0;
+
+  // Only show bottom section if there's something to display
+  if (hasTrainingOrPrograms || hasCoachNotes) {
     // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
-    let bottomY = Math.max(currentRowY + 5, thirdPage * 2 + 6);
+    let bottomY = currentRowY + 5;
+
+    // Coach Notes section (above What's Next)
+    if (hasCoachNotes) {
+      doc.setFontSize(11);
+      doc.setFont("Montserrat", "bold");
+      doc.setTextColor(...brandBlue);
+      doc.text("Coach Notes:", leftX, bottomY);
+      bottomY += lineHeight;
+
+      doc.setFontSize(8);
+      doc.setFont("Montserrat", "normal");
+      doc.setTextColor(...darkGray);
+      allCoachNotes.forEach(({ category, note }) => {
+        doc.setFont("Montserrat", "bold");
+        doc.text(`${category}:`, leftX, bottomY);
+        const labelWidth = doc.getTextWidth(`${category}: `);
+        doc.setFont("Montserrat", "normal");
+        const wrappedNote = doc.splitTextToSize(note, pageWidth - margin * 2 - labelWidth);
+        doc.text(wrappedNote, leftX + labelWidth, bottomY);
+        bottomY += wrappedNote.length * 3.5 + 1;
+      });
+      bottomY += 4;
+    }
 
     // What's Next? header
-    doc.setFontSize(14);
+    doc.setFontSize(11);
     doc.setFont("Montserrat", "bold");
     doc.setTextColor(...brandBlue);
     doc.text("What's Next?", leftX, bottomY);
@@ -454,6 +497,7 @@ export async function generateReportCardPDF(
         doc.setTextColor(...darkGray);
         doc.text("Suggested Training:", leftX, bottomY);
         const trainingHeadingWidth = doc.getTextWidth("Suggested Training:  ");
+        doc.setFontSize(9);
         doc.setFont("Montserrat", "normal");
         doc.setTextColor(...black);
         const firstTraining = selectedTraining[0].skill_name.replace(/^Suggested Training:\s*/i, "");
@@ -461,8 +505,6 @@ export async function generateReportCardPDF(
 
         // Remaining items underneath
         if (selectedTraining.length > 1) {
-          doc.setFontSize(9);
-          doc.setFont("Montserrat", "normal");
           selectedTraining.slice(1).forEach((skill) => {
             bottomY += lineHeight - 1;
             const displayName = skill.skill_name.replace(/^Suggested Training:\s*/i, "");
@@ -480,6 +522,7 @@ export async function generateReportCardPDF(
         doc.setTextColor(...darkGray);
         doc.text("Recommended Programs:", rightColX, programsY);
         const programsHeadingWidth = doc.getTextWidth("Recommended Programs:  ");
+        doc.setFontSize(9);
         doc.setFont("Montserrat", "normal");
         doc.setTextColor(...black);
         const firstProgram = selectedPrograms[0].skill_name.replace(/^Programs for Next Season:\s*/i, "");
@@ -487,8 +530,6 @@ export async function generateReportCardPDF(
 
         // Remaining items underneath
         if (selectedPrograms.length > 1) {
-          doc.setFontSize(9);
-          doc.setFont("Montserrat", "normal");
           selectedPrograms.slice(1).forEach((skill) => {
             programsY += lineHeight - 1;
             const displayName = skill.skill_name.replace(/^Programs for Next Season:\s*/i, "");
@@ -500,23 +541,6 @@ export async function generateReportCardPDF(
 
       // Use whichever column is taller
       bottomY = Math.max(bottomY, programsY) + 3;
-    }
-
-    // Goals underneath Training and Programs
-    if (hasGoals) {
-      bottomY += 6;
-      doc.setFontSize(14);
-      doc.setFont("Montserrat", "bold");
-      doc.setTextColor(...brandBlue);
-      doc.text("Goals for Next Season:", leftX, bottomY);
-      bottomY += lineHeight + 1;
-
-      // Comments/goals text
-      doc.setFont("Montserrat", "normal");
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(8);
-      const splitComments = doc.splitTextToSize(notes, pageWidth - margin * 2);
-      doc.text(splitComments, leftX, bottomY);
     }
   }
 

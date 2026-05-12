@@ -37,6 +37,9 @@ export default function AdminPanel() {
   const [adminNotes, setAdminNotes] = useState('')
   const [editableScores, setEditableScores] = useState<any[]>([])
   const [editableNotes, setEditableNotes] = useState('')
+  const [editableAthleteName, setEditableAthleteName] = useState('')
+  const [editableCoachName, setEditableCoachName] = useState('')
+  const [editableGroupName, setEditableGroupName] = useState('')
   const [previewReportCard, setPreviewReportCard] = useState<ReportCard | null>(null)
   const [previewEvaluation, setPreviewEvaluation] = useState<any>(null)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
@@ -171,7 +174,8 @@ export default function AdminPanel() {
       season: '2025/26',
       date: new Date().toLocaleDateString(),
       groupName: reportCard.evaluation?.group_name,
-      programType: reportCard.evaluation?.program_type
+      programType: reportCard.evaluation?.program_type,
+      categoryNotes: reportCard.evaluation?.category_notes
     })
     // Extract base64 content for email (remove data URL prefix)
     const pdfBase64 = pdfDataUrl.split(',')[1]
@@ -242,7 +246,8 @@ export default function AdminPanel() {
             season: '2025/26',
             date: new Date().toLocaleDateString(),
             groupName: evaluation.group_name,
-            programType: evaluation.program_type
+            programType: evaluation.program_type,
+            categoryNotes: evaluation.category_notes
           })
           // Convert data URL to blob URL for better iframe compatibility
           const byteString = atob(pdfBase64.split(',')[1])
@@ -286,9 +291,12 @@ export default function AdminPanel() {
     
     setSelectedReportCard(reportCard)
     setSelectedEvaluation(evaluation)
-    setEditableScores(evaluation.skill_scores || [])
-    setEditableNotes(evaluation.notes || '')
-    setAdminNotes(reportCard.admin_notes || '')
+        setEditableScores(evaluation.skill_scores || [])
+        setEditableNotes(evaluation.notes || '')
+        setAdminNotes(reportCard.admin_notes || '')
+        setEditableAthleteName(reportCard.athlete_name || '')
+        setEditableCoachName(reportCard.coach_name || '')
+        setEditableGroupName(evaluation.group_name || '')
   }
 
   async function updateEvaluationAndApprove() {
@@ -300,6 +308,7 @@ export default function AdminPanel() {
       .update({
         skill_scores: editableScores,
         notes: editableNotes,
+        group_name: editableGroupName,
         updated_at: new Date().toISOString()
       })
       .eq('id', selectedEvaluation.id)
@@ -307,6 +316,22 @@ export default function AdminPanel() {
     if (evalError) {
       alert('Error updating evaluation: ' + evalError.message)
       return
+    }
+
+    // Update athlete name if changed
+    if (editableAthleteName !== selectedReportCard.athlete_name) {
+      await supabase
+        .from('athletes')
+        .update({ full_name: editableAthleteName })
+        .eq('id', selectedReportCard.athlete_id)
+    }
+
+    // Update coach name if changed
+    if (editableCoachName !== selectedReportCard.coach_name) {
+      await supabase
+        .from('coaches')
+        .update({ full_name: editableCoachName })
+        .eq('id', selectedReportCard.coach_id)
     }
 
     // Approve the report card
@@ -836,6 +861,14 @@ export default function AdminPanel() {
                               Review
                             </button>
                           )}
+                          {rc.status === 'approved' && (
+                            <button
+                              onClick={() => openReviewModal(rc)}
+                              className="text-orange-600 hover:text-orange-900 mr-3"
+                            >
+                              Amend
+                            </button>
+                          )}
                           {rc.status === 'approved' && !rc.sent_to_parents && (
                             <button
                               onClick={() => sendReportCard(rc.id)}
@@ -911,6 +944,14 @@ export default function AdminPanel() {
                             Review
                           </button>
                         )}
+                        {rc.status === 'approved' && (
+                          <button
+                            onClick={() => openReviewModal(rc)}
+                            className="w-full py-2.5 px-4 bg-orange-50 text-orange-600 text-sm font-medium rounded hover:bg-orange-100 min-h-[44px]"
+                          >
+                            Amend
+                          </button>
+                        )}
                         {rc.status === 'approved' && !rc.sent_to_parents && (
                           <button
                             onClick={() => sendReportCard(rc.id)}
@@ -939,20 +980,54 @@ export default function AdminPanel() {
 
         {/* Report Card Review Modal */}
         {selectedReportCard && selectedEvaluation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-            <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 my-8">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8">
+            <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Review Report Card</h3>
               
-              {/* Athlete & Coach Info */}
-              <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <p className="text-gray-700">
-                  <strong>Athlete:</strong> {selectedReportCard.athlete_name}<br/>
-                  <strong>Coach:</strong> {selectedReportCard.coach_name}<br/>
-                  {selectedEvaluation.group_name && (
-                    <><strong>Group Name:</strong> {selectedEvaluation.group_name}<br/></>
-                  )}
+              {/* Athlete & Coach Info - Editable */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-3">
+                <div className="flex items-center gap-2">
+                  <strong className="text-gray-700 w-20">Athlete:</strong>
+                  <input
+                    type="text"
+                    value={editableAthleteName}
+                    onChange={(e) => setEditableAthleteName(e.target.value)}
+                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <strong className="text-gray-700 w-20">Coach:</strong>
+                  <input
+                    type="text"
+                    value={editableCoachName}
+                    onChange={(e) => setEditableCoachName(e.target.value)}
+                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <strong className="text-gray-700 w-20">Group:</strong>
+                  <input
+                    type="text"
+                    value={editableGroupName}
+                    onChange={(e) => setEditableGroupName(e.target.value)}
+                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <p className="text-gray-500 text-sm">
                   <strong>Submitted:</strong> {new Date(selectedReportCard.created_at).toLocaleString()}
                 </p>
+              </div>
+
+              {/* Athlete Evaluation Notes */}
+              <div className="mb-6">
+                <h4 className="font-bold text-lg mb-3 border-b pb-2">Athlete Evaluation</h4>
+                <textarea
+                  value={editableNotes}
+                  onChange={(e) => setEditableNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-blue-500"
+                  placeholder="How did the athlete do this season?"
+                />
               </div>
 
               {/* Editable Skill Scores */}
