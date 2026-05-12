@@ -4,7 +4,7 @@ interface EvalHeaderProps {
   onClose?: () => void
 }
 
-export default function EvalHeader({ athleteName, evaluatedCount, onClose }: EvalHeaderProps) {
+export default function EvalHeader({ athleteName, onClose }: EvalHeaderProps) {
   return (
     <div className="flex items-center mb-4 sm:mb-6 pb-4 sm:pb-6 border-b">
       <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-blue-100 flex items-center justify-center">

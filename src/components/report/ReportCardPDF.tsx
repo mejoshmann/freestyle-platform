@@ -297,7 +297,6 @@ export async function generateReportCardPDF(
       doc.text("No skills evaluated", scoresColX, currentRowY);
     } else if (category === "Freeride" || category === "Moguls / Bumps") {
       // Special rendering with descriptions
-      const descLineHeight = 2.5;
 
       let rowStartY = currentRowY;
       let currentRowMaxHeight = skillLineHeight;

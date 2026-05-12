@@ -117,10 +117,8 @@ export async function generateDetailedReport(
   const contentWidth = pageWidth - margin * 2;
 
   // Colors
-  const brandBlue: [number, number, number] = [0, 102, 204];
   const darkGray: [number, number, number] = [80, 80, 80];
   const black: [number, number, number] = [0, 0, 0];
-  const lightGray: [number, number, number] = [120, 120, 120];
 
   let currentY = margin + 5;
 
@@ -309,7 +307,6 @@ export async function generateDetailedReport(
     } else {
       // Standard layout: skills to the right of heading
       skills.forEach((skill, index) => {
-        const desc = skillDescriptions[skill.skill_id];
         const scoreText = getScoreDisplay(skill);
 
         // Skill name + score
@@ -361,9 +358,6 @@ export async function generateDetailedReport(
   const selectedPrograms = skillScores.filter(
     (s) => s.skill_id.startsWith("program-") && isProgramSelected(s.score)
   );
-
-  const hasCategoryNotes =
-    categoryNotes && Object.keys(categoryNotes).length > 0;
 
   const hasTrainingOrPrograms =
     selectedTraining.length > 0 || selectedPrograms.length > 0;
