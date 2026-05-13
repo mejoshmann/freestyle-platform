@@ -189,7 +189,7 @@ export default function SkillEvaluator({
       {/* Athlete Evaluation */}
       <div className="mb-4 sm:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Athlete Evaluation
+          Overall Feedback
         </label>
         <textarea
           value={notes}
@@ -197,7 +197,7 @@ export default function SkillEvaluator({
           rows={3}
           maxLength={250}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="How did the athlete do this season? What highlights or struggles did they face?"
+          placeholder="Write a brief note about the athlete's performance and any observations. Eg. Highlights, challenges, progress, areas for improvement"
         />
       </div>
 

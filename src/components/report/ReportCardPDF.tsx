@@ -273,20 +273,16 @@ export async function generateReportCardPDF(
 
   // Column positions - category on left, skills in a grid on the right
   const categoryColX = leftX;
-  const scoresColX = leftX + 50;
+  const scoresColX = leftX + 45;
   const numCols = 2; // 2 columns for all categories, aligned with Freeride
   const colWidth = (pageWidth - margin - scoresColX) / numCols;
 
   let currentRowY = skillsStartY;
 
   // Draw each category with grid-aligned scores
-  categories.forEach((category, catIndex) => {
+  categories.forEach((category) => {
     const skills = groupedSkills[category] || [];
-
-    // Add extra gap before each heading for FundamentalZ (fewer metrics, more space available)
-    if (programType === 'fundamentalz' && catIndex > 0) {
-      currentRowY += 3;
-    }
+    const categoryStartY = currentRowY;
 
     // Category name on the left
     doc.setFontSize(10);
@@ -302,6 +298,7 @@ export async function generateReportCardPDF(
       doc.text("No skills evaluated", scoresColX, currentRowY);
     } else if (category === "Freeride" || category === "Moguls / Bumps") {
       // Special rendering with descriptions
+      const descLineHeight = 2.5;
 
       // Filter out N/A (score 0) skills
       const displaySkills = skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined);
@@ -314,39 +311,38 @@ export async function generateReportCardPDF(
         const skillX = scoresColX + col * colWidth;
         const skillY = rowStartY;
 
-        const isSpinSkill = skill.skill_id.endsWith('-spins');
         const isAttendance = skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
         const isTerrain = skill.skill_id === "moguls-terrain";
-        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isSpinSkill ? skill.score.toString() : isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
 
-        // Skill name - use singular form for spin skills ("Left Spin" instead of "Left Spins")
-        let displayName = isSpinSkill ? skill.skill_name.replace(/ Spins$/, ' Spin') : skill.skill_name;
-        const maxNameWidth = colWidth - 12;
+        // Skill name
+        doc.setFontSize(8);
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...darkGray);
+        let displayName = skill.skill_name;
+        const maxNameWidth = colWidth - 18;
         while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 3) {
           displayName = displayName.slice(0, -1);
         }
         if (displayName !== skill.skill_name) displayName += "..";
-        doc.setFontSize(8);
-        doc.setFont("Montserrat", "normal");
-        doc.setTextColor(...darkGray);
         doc.text(displayName, skillX, skillY);
 
-        // Score value right-aligned within column
-        doc.setFont("Montserrat", "normal");
+        // Score value
+        doc.setFont("Montserrat", "bold");
         doc.setTextColor(...black);
-        doc.text(scoreText, skillX + colWidth - 8, skillY);
+        const isMultiSelect = typeof skill.score === 'string' && (skill.score.includes(', ') || skill.skill_id === 'jump-grabs' || skill.skill_id === 'park-270-on-off' || skill.skill_id.endsWith('-spins') || skill.skill_id.endsWith('-forward'));
+        if (isMultiSelect) {
+          // Display inline after metric name: "Left Spins: 180 360 540"
+          const nameWidth = doc.getTextWidth(displayName);
+          const scoreInline = (skill.score as string).split(', ').join(' ');
+          doc.setFontSize(7);
+          doc.text(scoreInline, skillX + nameWidth + 2, skillY);
+        } else {
+          doc.text(scoreText, skillX + maxNameWidth + 2, skillY);
+        }
 
         // Description removed - only shown in coach evaluation UI
-        // const description = skillDescriptions[skill.skill_id];
-        let skillHeight = skillLineHeight;
-        // if (description) {
-        //   doc.setFontSize(6);
-        //   doc.setFont("Montserrat", "normal");
-        //   doc.setTextColor(...darkGray);
-        //   const wrapped = doc.splitTextToSize(description, colWidth - 12);
-        //   doc.text(wrapped, skillX, skillY + 3);
-        //   skillHeight = 3 + wrapped.length * descLineHeight + 1;
-        // }
+        const skillHeight = skillLineHeight;
 
         currentRowMaxHeight = Math.max(currentRowMaxHeight, skillHeight);
 
@@ -359,7 +355,7 @@ export async function generateReportCardPDF(
 
       currentRowY = rowStartY - skillLineHeight;
     } else {
-      // For Air Tricks, filter out unevaluated skills (score 0 / N/A / null)
+      // Filter out N/A (score 0) skills from all categories
       const displaySkills = skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined);
 
       // Use 2 columns for all categories
@@ -371,42 +367,65 @@ export async function generateReportCardPDF(
       doc.setTextColor(...black);
 
       let rowStartY = currentRowY;
+      let currentRowMaxHeight = skillLineHeight;
       displaySkills.forEach((skill, index) => {
         const col = index % catCols;
-        const row = Math.floor(index / catCols);
         const skillX = scoresColX + col * catColWidth;
-        const skillY = rowStartY + row * skillLineHeight;
+        const skillY = rowStartY;
 
-        // Skill name (truncated if needed)
-        const isSpinSkill = skill.skill_id.endsWith('-spins');
         const isAttendance = skill.skill_id === "attendance" || skill.skill_id.startsWith("attendance-");
         const isTerrain = skill.skill_id === "moguls-terrain";
-        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isSpinSkill ? skill.score.toString() : isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
+        const scoreText = skill.score === 0 ? "N/A" : skill.score != null ? (isAttendance ? `${(skill.score as number) * 25}%` : isTerrain ? ((skill.score as number) <= 2 ? "Green" : "Blue") : skill.score.toString()) : "-";
         
-        // Skill name - use singular form for spin skills ("Left Spin" instead of "Left Spins")
-        let displayName = isSpinSkill ? skill.skill_name.replace(/ Spins$/, ' Spin') : skill.skill_name;
+        // Skill name (truncated if needed)
+        doc.setFont("Montserrat", "normal");
+        doc.setTextColor(...darkGray);
+        let displayName = skill.skill_name;
         // Truncate long names to fit column
-        const maxNameWidth = catColWidth - 12;
+        const maxNameWidth = catColWidth - 18;
         while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 3) {
           displayName = displayName.slice(0, -1);
         }
         if (displayName !== skill.skill_name) displayName += "..";
         doc.text(displayName, skillX, skillY);
 
-        // Score value right-aligned within column
-        doc.setFont("Montserrat", "normal");
+        // Score value
+        doc.setFont("Montserrat", "bold");
         doc.setTextColor(...black);
-        doc.text(scoreText, skillX + catColWidth - 8, skillY);
+        const isMultiSelect = typeof skill.score === 'string' && (skill.score.includes(', ') || skill.skill_id === 'jump-grabs' || skill.skill_id === 'park-270-on-off' || skill.skill_id.endsWith('-spins') || skill.skill_id.endsWith('-forward'));
+        if (isMultiSelect) {
+          // Display inline after metric name: "Left Spins: 180 360 540"
+          const nameWidth = doc.getTextWidth(displayName);
+          const scoreInline = (skill.score as string).split(', ').join(' ');
+          doc.setFontSize(7);
+          doc.text(scoreInline, skillX + nameWidth + 2, skillY);
+        } else {
+          doc.text(scoreText, skillX + maxNameWidth + 2, skillY);
+        }
+
+        const skillHeight = skillLineHeight;
+        currentRowMaxHeight = Math.max(currentRowMaxHeight, skillHeight);
+
+        // Advance to next row after last column or last skill
+        if (col === catCols - 1 || index === displaySkills.length - 1) {
+          rowStartY += currentRowMaxHeight;
+          currentRowMaxHeight = skillLineHeight;
+        }
       });
 
-      // Update currentRowY based on number of rows used
-      const totalRows = Math.ceil(displaySkills.length / catCols);
-      if (totalRows > 1) {
-        currentRowY += (totalRows - 1) * skillLineHeight;
-      }
+      // Update currentRowY based on actual rows used
+      currentRowY = rowStartY - skillLineHeight;
     }
 
-    currentRowY += categoryRowHeight - 1;
+    // Draw box around the category (before adding inter-category spacing)
+    const boxTop = categoryStartY - 4;
+    const boxBottom = currentRowY;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(categoryColX - 2, boxTop, pageWidth - margin * 2 + 4, boxBottom - boxTop + 1, 1, 1);
+
+    // Add spacing between category boxes
+    currentRowY += categoryRowHeight;
   });
 
   // ========== BOTTOM THIRD - WHAT'S NEXT ==========
@@ -458,9 +477,8 @@ export async function generateReportCardPDF(
 
   // Only show bottom section if there's something to display
   if (hasTrainingOrPrograms || hasCoachNotes) {
-    // For FundamentalZ (fewer metrics), ensure bottom section doesn't start too high
-    const minBottomY = programType === 'fundamentalz' ? thirdPage * 2 + 6 : currentRowY + 5;
-    let bottomY = Math.max(currentRowY + 5, minBottomY);
+    // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
+    let bottomY = currentRowY + 5;
 
     // Coach Notes section (above What's Next)
     if (hasCoachNotes) {

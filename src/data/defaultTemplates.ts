@@ -58,10 +58,7 @@ const sharedAirTricks: TemplateDefinition = {
   name: 'Air Tricks',
   description: 'Air Tricks evaluation',
   skills: [
-    { id: 'jump-safety-grab', name: 'Safety Grab', description: 'Safety grab' },
-    { id: 'jump-japan-grab', name: 'Japan Grab', description: 'Japan grab' },
-    { id: 'jump-mute-grab', name: 'Mute Grab', description: 'Mute grab' },
-    { id: 'jump-tip-tail-grabs', name: 'Tip/Tail Grabs', description: 'Tip and tail grab' },
+    { id: 'jump-grabs', name: 'Grabs', description: 'Grab progression' },
     { id: 'jump-left-spins', name: 'Left Spins', description: 'Left spin progression' },
     { id: 'jump-right-spins', name: 'Right Spins', description: 'Right spin progression' },
     { id: 'jump-switch-left-spins', name: 'Switch Left Spins', description: 'Switch left spin progression' },
@@ -89,16 +86,11 @@ const sharedTerrainPark: TemplateDefinition = {
   description: 'Terrain Park evaluation',
   skills: [
     { id: 'park-safety', name: 'Safety', description: 'Safety awareness and etiquette' },
-    { id: 'park-left-box', name: 'Left Foot Box Slide', description: 'Left foot box slide' },
-    { id: 'park-right-box', name: 'Right Foot Box Slide', description: 'Right foot box slide' },
-    { id: 'park-left-tube', name: 'Left Foot Tube Slide', description: 'Left foot tube slide' },
-    { id: 'park-right-tube', name: 'Right Foot Tube Slide', description: 'Right foot tube slide' },
-    { id: 'park-switch-box', name: 'Switch Box Slide', description: 'Switch box slide' },
-    { id: 'park-switch-tube', name: 'Switch Tube Slide', description: 'Switch tube slide' },
-    { id: 'park-front-270-out', name: 'Front 270 Out', description: 'Front 270 out' },
-    { id: 'park-back-270-out', name: 'Back 270 Out', description: 'Back 270 out' },
-    { id: 'park-switch-up', name: 'Switch Up', description: 'Switch up' },
-    { id: 'park-270-on', name: '270 On', description: '270 on' },
+    { id: 'park-left-forward', name: 'Left Foot Forward', description: 'Left foot forward slide progression' },
+    { id: 'park-right-forward', name: 'Right Foot Forward', description: 'Right foot forward slide progression' },
+    { id: 'park-switch-left-forward', name: 'Switch Left Foot Forward', description: 'Switch left foot forward slide progression' },
+    { id: 'park-switch-right-forward', name: 'Switch Right Foot Forward', description: 'Switch right foot forward slide progression' },
+    { id: 'park-270-on-off', name: '270 On & Off', description: '270 on and off progression' },
   ],
 }
 
@@ -151,7 +143,7 @@ const fundamentalzFreeride: TemplateDefinition = {
     { id: 'freeski-switch', name: 'Switch Skiing', description: 'Pizza vs Parallel skis, Vision up' },
     { id: 'freeski-switch-stops', name: 'Controlled Stops', description: 'Controlled stops while skiing switch' },
     { id: 'freeski-spinning', name: 'Spinning on Snow', description: '360s and spins on flat snow' },
-    { id: 'freeski-control', name: 'Skiing with Control', description: 'Overall control and style' },
+    { id: 'freeski-control', name: 'Skiing in Control', description: 'Overall control and style' },
   ],
 }
 
@@ -165,7 +157,6 @@ const freestylerzFreeride: TemplateDefinition = {
     { id: 'freeski-timing-coordination', name: 'Timing & Coordination', description: 'Pole plant consistently, 4 phases of the turn' },
     { id: 'freeski-freeride-style', name: 'Freeride Style / Impression', description: 'Overall freeride style and impression' },
     { id: 'freeski-switch', name: 'Switch Skiing', description: 'Comfort on Greens vs Blues, Ski whole run switch safely, Vision in right place' },
-    { id: 'freeski-spinning', name: 'Spinning on Snow', description: '360s and spins on flat snow' },
     { id: 'freeski-control', name: 'Skiing with Control', description: 'Overall control and style' },
   ],
 }

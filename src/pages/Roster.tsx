@@ -403,7 +403,8 @@ export default function Roster() {
                 onClick={() => {
                   setSelectedProgramType('fundamentalz')
                   setShowProgramSelector(false)
-                  setShowMetricsSelector(true)
+                  setSelectedMetricsSet(null)
+                  setShowEvaluation(true)
                 }}
                 className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-center group"
               >
@@ -416,7 +417,8 @@ export default function Roster() {
                 onClick={() => {
                   setSelectedProgramType('freestylerz')
                   setShowProgramSelector(false)
-                  setShowMetricsSelector(true)
+                  setSelectedMetricsSet(null)
+                  setShowEvaluation(true)
                 }}
                 className="w-full p-6 bg-[#ED4137]/10 border-2 border-[#ED4137]/30 rounded-xl hover:bg-[#ED4137]/20 hover:border-[#ED4137]/50 transition-all text-center group"
               >
@@ -458,10 +460,9 @@ export default function Roster() {
                   setShowMetricsSelector(false)
                   setShowEvaluation(true)
                 }}
-                className="w-full p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 text-left"
+                className="w-full p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 text-center"
               >
-                <h3 className="font-medium text-gray-900">All Metrics</h3>
-                <p className="text-sm text-gray-500">{allSkills.length} skills from all categories</p>
+                <h3 className="font-medium text-gray-900">{selectedProgramType === 'fundamentalz' ? 'FUNdamentalz Metrics' : 'Freestylerz All Metrics'}</h3>
               </button>
 
               {/* Custom Metrics Sets */}

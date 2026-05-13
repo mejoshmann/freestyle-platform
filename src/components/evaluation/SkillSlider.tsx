@@ -30,6 +30,15 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
   const isSpinSkill = skill.id.endsWith('-spins')
   const spinDegrees = ['180', '360', '540', '720']
 
+  const isFootForwardSkill = skill.id.endsWith('-forward')
+  const slideOptions = ['Box Slide', 'Tube Slide', 'Rail Slide', 'Challenge Rail']
+
+  const is270Skill = skill.id === 'park-270-on-off'
+  const twoSeventyOptions = ['Front 270 Out', 'Back 270 Out', 'Switch Up', '270 On']
+
+  const isGrabSkill = skill.id === 'jump-grabs'
+  const grabOptions = ['Safety', 'Japan', 'Mute', 'Tip/Tail']
+
   const isYesNoSkill = yesNoCategories.some(cat => {
     const catLower = cat.toLowerCase()
     return skillNameLower.includes(catLower) || 
@@ -173,8 +182,16 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
   }
 
   if (isSpinSkill) {
-    // Degree selection buttons for grouped spin skills
-    const selectedDegree = typeof value === 'string' ? value : null
+    // Degree selection buttons for grouped spin skills (multi-select)
+    const selectedDegrees = typeof value === 'string' ? value.split(', ') : []
+    const toggleDegree = (degree: string) => {
+      if (selectedDegrees.includes(degree)) {
+        const remaining = selectedDegrees.filter(d => d !== degree)
+        onChange(remaining.length > 0 ? remaining.join(', ') : null)
+      } else {
+        onChange([...selectedDegrees, degree].join(', '))
+      }
+    }
     return (
       <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
         <div className="flex justify-between items-center mb-2 gap-2">
@@ -202,9 +219,9 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
             {spinDegrees.map((degree) => (
               <button
                 key={degree}
-                onClick={() => onChange(selectedDegree === degree ? null : degree)}
+                onClick={() => toggleDegree(degree)}
                 className={`flex-1 py-2 sm:py-2.5 rounded-lg font-bold text-sm sm:text-base transition-colors ${
-                  selectedDegree === degree
+                  selectedDegrees.includes(degree)
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
                     : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
                 }`}
@@ -243,6 +260,188 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
             </div>
           )}
         </div>
+      </div>
+    )
+  }
+
+  if (isFootForwardSkill) {
+    // Slide option selection buttons for foot forward skills (multi-select)
+    const selectedOptions = typeof value === 'string' ? value.split(', ') : []
+    const toggleOption = (option: string) => {
+      if (selectedOptions.includes(option)) {
+        const remaining = selectedOptions.filter(o => o !== option)
+        onChange(remaining.length > 0 ? remaining.join(', ') : null)
+      } else {
+        onChange([...selectedOptions, option].join(', '))
+      }
+    }
+    return (
+      <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+        <div className="flex justify-between items-center mb-2 gap-2">
+          <label className={`text-xs sm:text-base font-medium flex-1 min-w-0 ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+            {skill.name}
+          </label>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => onChange(isSkipped ? 'Box Slide' : null)}
+              className={`text-xs px-2 py-1 rounded ${
+                isSkipped 
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              {isSkipped ? 'Enable' : 'Skip'}
+            </button>
+          </div>
+        </div>
+        {!isSkipped && (
+          <div className="grid grid-cols-2 gap-2">
+            {slideOptions.map((option) => (
+              <button
+                key={option}
+                onClick={() => toggleOption(option)}
+                className={`py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors ${
+                  selectedOptions.includes(option)
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mt-2">
+          {!noteOpen ? (
+            <button
+              onClick={() => setNoteOpen(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              Add note
+            </button>
+          ) : (
+            <div className="relative">
+              <textarea
+                value={notes || ''}
+                onChange={(e) => onNotesChange?.(e.target.value)}
+                placeholder="Add a note..."
+                rows={2}
+                className="w-full text-xs p-2 pr-6 border border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {(!notes || !notes.trim()) && (
+                <button
+                  onClick={() => setNoteOpen(false)}
+                  className="absolute top-1 right-1 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (is270Skill) {
+    // Option selection buttons for 270 On & Off skill (multi-select)
+    const selectedOptions = typeof value === 'string' ? value.split(', ') : []
+    const toggleOption = (option: string) => {
+      if (selectedOptions.includes(option)) {
+        const remaining = selectedOptions.filter(o => o !== option)
+        onChange(remaining.length > 0 ? remaining.join(', ') : null)
+      } else {
+        onChange([...selectedOptions, option].join(', '))
+      }
+    }
+    return (
+      <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+        <div className="flex justify-between items-center mb-2 gap-2">
+          <label className={`text-xs sm:text-base font-medium flex-1 min-w-0 ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+            {skill.name}
+          </label>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => onChange(isSkipped ? 'Front 270 Out' : null)}
+              className={`text-xs px-2 py-1 rounded ${
+                isSkipped 
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              {isSkipped ? 'Enable' : 'Skip'}
+            </button>
+          </div>
+        </div>
+        {!isSkipped && (
+          <div className="grid grid-cols-2 gap-2">
+            {twoSeventyOptions.map((option) => (
+              <button
+                key={option}
+                onClick={() => toggleOption(option)}
+                className={`px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                  selectedOptions.includes(option)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (isGrabSkill) {
+    // Option selection buttons for Grabs skill (multi-select)
+    const selectedOptions = typeof value === 'string' ? value.split(', ') : []
+    const toggleOption = (option: string) => {
+      if (selectedOptions.includes(option)) {
+        const remaining = selectedOptions.filter(o => o !== option)
+        onChange(remaining.length > 0 ? remaining.join(', ') : null)
+      } else {
+        onChange([...selectedOptions, option].join(', '))
+      }
+    }
+    return (
+      <div className={`p-2 sm:p-4 rounded-lg shadow transition-colors ${isSkipped ? 'bg-gray-100' : 'bg-white'}`}>
+        <div className="flex justify-between items-center mb-2 gap-2">
+          <label className={`text-xs sm:text-base font-medium flex-1 min-w-0 ${isSkipped ? 'text-gray-400' : 'text-gray-900'}`}>
+            {skill.name}
+          </label>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => onChange(isSkipped ? 'Safety' : null)}
+              className={`text-xs px-2 py-1 rounded ${
+                isSkipped 
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              {isSkipped ? 'Enable' : 'Skip'}
+            </button>
+          </div>
+        </div>
+        {!isSkipped && (
+          <div className="grid grid-cols-2 gap-2">
+            {grabOptions.map((option) => (
+              <button
+                key={option}
+                onClick={() => toggleOption(option)}
+                className={`px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                  selectedOptions.includes(option)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     )
   }
