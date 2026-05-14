@@ -282,7 +282,6 @@ export async function generateReportCardPDF(
   // Draw each category with grid-aligned scores
   categories.forEach((category, categoryIndex) => {
     const skills = groupedSkills[category] || [];
-    const categoryStartY = currentRowY;
 
     // Draw thin line above the category title for all but the first category
     if (categoryIndex > 0) {
@@ -305,7 +304,6 @@ export async function generateReportCardPDF(
       doc.text("No skills evaluated", scoresColX, currentRowY);
     } else if (category === "Freeride" || category === "Moguls / Bumps") {
       // Special rendering with descriptions
-      const descLineHeight = 2.5;
 
       // Filter out N/A (score 0) skills
       const displaySkills = skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined);
