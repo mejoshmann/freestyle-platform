@@ -343,7 +343,7 @@ export async function generateReportCardPDF(
           // Grabs and Spins show all selections; others show only the last
           const scoreInline = (skill.skill_id === 'jump-grabs' || skill.skill_id.endsWith('-spins'))
             ? options.join(' ')
-            : options[options.length - 1];
+            : options[options.length - 1].replace(/\bRail\b/i, '').trim();
           doc.setFontSize(8);
           // Spins left-aligned; grabs/slides/270 right-aligned to score position
           if (skill.skill_id.endsWith('-spins')) {
@@ -412,7 +412,7 @@ export async function generateReportCardPDF(
           // Grabs and Spins show all selections; others show only the last
           const scoreInline = (skill.skill_id === 'jump-grabs' || skill.skill_id.endsWith('-spins'))
             ? options.join(' ')
-            : options[options.length - 1];
+            : options[options.length - 1].replace(/\bRail\b/i, '').trim();
           doc.setFontSize(8);
           // Spins left-aligned; grabs/slides/270 right-aligned to score position
           if (skill.skill_id.endsWith('-spins')) {

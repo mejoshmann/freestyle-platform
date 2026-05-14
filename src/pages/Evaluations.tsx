@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import MediaGallery from '../components/media/MediaGallery'
-import { downloadDetailedReport } from '../components/report/DetailedReportPDF'
 import type { Athlete, SkillScore } from '../types'
 
 interface Evaluation {
@@ -218,41 +217,6 @@ export default function Evaluations() {
                   </div>
                 )}
 
-                {/* Report Card Buttons - Admin Only */}
-                {coach?.is_admin && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => alert('Report card generation coming soon!')}
-                      className="flex-1 py-2 px-4 border border-blue-300 text-blue-600 rounded hover:bg-blue-50"
-                    >
-                      Generate Report Card
-                    </button>
-                    <button
-                      onClick={async () => {
-                        try {
-                          const currentYear = new Date().getFullYear()
-                          const season = `${currentYear - 1}/${currentYear.toString().slice(-2)}`
-                          await downloadDetailedReport({
-                            athlete,
-                            coachName: coach?.full_name || 'Coach',
-                            skillScores: evaluation.skill_scores || [],
-                            notes: evaluation.notes || '',
-                            season,
-                            groupName: evaluation.group_name,
-                            programType: evaluation.program_type,
-                            categoryNotes: evaluation.category_notes,
-                          })
-                        } catch (e) {
-                          console.error('Failed to generate detailed report:', e)
-                          alert('Failed to generate detailed report. Please try again.')
-                        }
-                      }}
-                      className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-                    >
-                      Detailed Report
-                    </button>
-                  </div>
-                )}
               </div>
             ))}
           </div>

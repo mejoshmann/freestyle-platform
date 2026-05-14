@@ -179,22 +179,25 @@ export default function Sidebar() {
                 &times;
               </button>
             </div>
+            <p className="text-sm text-gray-700 mb-3">
+              This app helps you track athlete progression and deliver professional report cards to parents. Evaluations give athletes clear feedback on where they stand and what to work on next.
+            </p>
             <ul className="text-sm text-gray-700 space-y-3">
               <li className="flex items-start">
-                <span className="mr-2 mt-0.5">1.</span>
-                <span>Add the athletes you have coached to your roster from the "All Athletes" tab</span>
+                <span className="mr-2 mt-0.5 font-bold">1.</span>
+                <span><strong>Build your roster</strong> — Add athletes from the "All Athletes" tab to your coaching roster.</span>
               </li>
               <li className="flex items-start">
-                <span className="mr-2 mt-0.5">2.</span>
-                <span>Evaluate them on their performance using the built-in metrics</span>
+                <span className="mr-2 mt-0.5 font-bold">2.</span>
+                <span><strong>Run evaluations</strong> — Score each athlete on program-specific skills (FUNdamentalz or Freestylerz).</span>
               </li>
               <li className="flex items-start">
-                <span className="mr-2 mt-0.5">3.</span>
-                <span>Upload photos and videos during evaluations or from the roster</span>
+                <span className="mr-2 mt-0.5 font-bold">3.</span>
+                <span><strong>Capture media</strong> — Upload photos and videos during evaluations to document progress.</span>
               </li>
               <li className="flex items-start">
-                <span className="mr-2 mt-0.5">4.</span>
-                <span>Save evaluations to be sent out as report cards for parents to see</span>
+                <span className="mr-2 mt-0.5 font-bold">4.</span>
+                <span><strong>Send report cards</strong> — Save evaluations to generate PDF report cards that get emailed directly to parents.</span>
               </li>
             </ul>
             <button
