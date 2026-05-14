@@ -268,7 +268,7 @@ export async function generateReportCardPDF(
   const skillsStartY = currentY;
 
   // Layout constants - reduced spacing
-  const categoryRowHeight = 6;
+  const categoryRowHeight = 4;
   const skillLineHeight = 4.2;
 
   // Column positions - category on left, skills in a grid on the right
@@ -280,9 +280,16 @@ export async function generateReportCardPDF(
   let currentRowY = skillsStartY;
 
   // Draw each category with grid-aligned scores
-  categories.forEach((category) => {
+  categories.forEach((category, categoryIndex) => {
     const skills = groupedSkills[category] || [];
     const categoryStartY = currentRowY;
+
+    // Draw thin line above the category title for all but the first category
+    if (categoryIndex > 0) {
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(categoryColX, currentRowY - 4, pageWidth - margin, currentRowY - 4);
+    }
 
     // Category name on the left
     doc.setFontSize(10);
@@ -332,11 +339,18 @@ export async function generateReportCardPDF(
         doc.setTextColor(...black);
         const isMultiSelect = typeof skill.score === 'string' && (skill.score.includes(', ') || skill.skill_id === 'jump-grabs' || skill.skill_id === 'park-270-on-off' || skill.skill_id.endsWith('-spins') || skill.skill_id.endsWith('-forward'));
         if (isMultiSelect) {
-          // Display inline after metric name: "Left Spins: 180 360 540"
-          const nameWidth = doc.getTextWidth(displayName);
-          const scoreInline = (skill.score as string).split(', ').join(' ');
-          doc.setFontSize(7);
-          doc.text(scoreInline, skillX + nameWidth + 2, skillY);
+          const options = (skill.score as string).split(', ');
+          // Grabs and Spins show all selections; others show only the last
+          const scoreInline = (skill.skill_id === 'jump-grabs' || skill.skill_id.endsWith('-spins'))
+            ? options.join(' ')
+            : options[options.length - 1];
+          doc.setFontSize(8);
+          // Spins left-aligned; grabs/slides/270 right-aligned to score position
+          if (skill.skill_id.endsWith('-spins')) {
+            doc.text(scoreInline, skillX + maxNameWidth + 2, skillY);
+          } else {
+            doc.text(scoreInline, skillX + maxNameWidth + 4, skillY, { align: 'right' });
+          }
         } else {
           doc.text(scoreText, skillX + maxNameWidth + 2, skillY);
         }
@@ -353,7 +367,7 @@ export async function generateReportCardPDF(
         }
       });
 
-      currentRowY = rowStartY - skillLineHeight;
+      currentRowY = rowStartY;
     } else {
       // Filter out N/A (score 0) skills from all categories
       const displaySkills = skills.filter(s => s.score !== 0 && s.score !== null && s.score !== undefined);
@@ -394,11 +408,18 @@ export async function generateReportCardPDF(
         doc.setTextColor(...black);
         const isMultiSelect = typeof skill.score === 'string' && (skill.score.includes(', ') || skill.skill_id === 'jump-grabs' || skill.skill_id === 'park-270-on-off' || skill.skill_id.endsWith('-spins') || skill.skill_id.endsWith('-forward'));
         if (isMultiSelect) {
-          // Display inline after metric name: "Left Spins: 180 360 540"
-          const nameWidth = doc.getTextWidth(displayName);
-          const scoreInline = (skill.score as string).split(', ').join(' ');
-          doc.setFontSize(7);
-          doc.text(scoreInline, skillX + nameWidth + 2, skillY);
+          const options = (skill.score as string).split(', ');
+          // Grabs and Spins show all selections; others show only the last
+          const scoreInline = (skill.skill_id === 'jump-grabs' || skill.skill_id.endsWith('-spins'))
+            ? options.join(' ')
+            : options[options.length - 1];
+          doc.setFontSize(8);
+          // Spins left-aligned; grabs/slides/270 right-aligned to score position
+          if (skill.skill_id.endsWith('-spins')) {
+            doc.text(scoreInline, skillX + maxNameWidth + 2, skillY);
+          } else {
+            doc.text(scoreInline, skillX + maxNameWidth + 4, skillY, { align: 'right' });
+          }
         } else {
           doc.text(scoreText, skillX + maxNameWidth + 2, skillY);
         }
@@ -414,17 +435,10 @@ export async function generateReportCardPDF(
       });
 
       // Update currentRowY based on actual rows used
-      currentRowY = rowStartY - skillLineHeight;
+      currentRowY = rowStartY;
     }
 
-    // Draw box around the category (before adding inter-category spacing)
-    const boxTop = categoryStartY - 4;
-    const boxBottom = currentRowY;
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(categoryColX - 2, boxTop, pageWidth - margin * 2 + 4, boxBottom - boxTop + 1, 1, 1);
-
-    // Add spacing between category boxes
+    // Add spacing between categories
     currentRowY += categoryRowHeight;
   });
 
@@ -478,7 +492,7 @@ export async function generateReportCardPDF(
   // Only show bottom section if there's something to display
   if (hasTrainingOrPrograms || hasCoachNotes) {
     // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
-    let bottomY = currentRowY + 5;
+    let bottomY = currentRowY + 2;
 
     // Coach Notes section (above What's Next)
     if (hasCoachNotes) {
@@ -508,7 +522,7 @@ export async function generateReportCardPDF(
     doc.setFont("Montserrat", "bold");
     doc.setTextColor(...brandBlue);
     doc.text("What's Next?", leftX, bottomY);
-    bottomY += lineHeight + 2;
+    bottomY += lineHeight;
 
     // Training (left) and Programs (right) side by side
     if (hasTrainingOrPrograms) {

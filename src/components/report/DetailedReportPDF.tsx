@@ -317,7 +317,7 @@ export async function generateDetailedReport(
         if (index > 0) {
           currentY = checkPageBreak(doc, currentY, 8, margin, pageHeight);
         }
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont("Montserrat", "normal");
         doc.setTextColor(...black);
         doc.text(skill.skill_name, skillsColX, currentY);

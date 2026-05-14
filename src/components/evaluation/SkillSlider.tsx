@@ -295,12 +295,12 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
           </div>
         </div>
         {!isSkipped && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-4 gap-1">
             {slideOptions.map((option) => (
               <button
                 key={option}
                 onClick={() => toggleOption(option)}
-                className={`py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors ${
+                className={`py-2 sm:py-2.5 rounded-lg font-bold text-[10px] sm:text-xs transition-colors ${
                   selectedOptions.includes(option)
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
                     : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
