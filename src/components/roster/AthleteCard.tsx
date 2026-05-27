@@ -14,7 +14,7 @@ interface AthleteCardProps {
 export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete, onViewMedia }: AthleteCardProps) {
   return (
     <div 
-      className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden active:bg-gray-50 group"
+      className="bg-white rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden active:scale-[0.98] group"
     >
       <div className="flex items-center p-3 sm:p-4">
         <div 
@@ -28,7 +28,7 @@ export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete, 
               className="h-12 w-12 sm:h-16 sm:w-16 rounded-full object-cover"
             />
           ) : (
-            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gray-200 flex items-center justify-center">
+            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gray-100 flex items-center justify-center">
               <span className="text-xl sm:text-2xl text-gray-500">
                 {name.charAt(0).toUpperCase()}
               </span>

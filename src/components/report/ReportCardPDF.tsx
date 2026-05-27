@@ -338,10 +338,10 @@ export async function generateReportCardPDF(
         const isMultiSelect = typeof skill.score === 'string' && (skill.score.includes(', ') || skill.skill_id === 'jump-grabs' || skill.skill_id === 'park-270-on-off' || skill.skill_id.endsWith('-spins') || skill.skill_id.endsWith('-forward'));
         if (isMultiSelect) {
           const options = (skill.score as string).split(', ');
-          // Grabs and Spins show all selections; others show only the last
-          const scoreInline = (skill.skill_id === 'jump-grabs' || skill.skill_id.endsWith('-spins'))
+          // Grabs show all selections; spins/slides/270 show only the last (highest)
+          const scoreInline = skill.skill_id === 'jump-grabs'
             ? options.join(' ')
-            : options[options.length - 1].replace(/\bRail\b/i, '').trim();
+            : options[options.length - 1].replace(/^Challenge Rail$/i, 'Challenge').trim();
           doc.setFontSize(8);
           // Spins left-aligned; grabs/slides/270 right-aligned to score position
           if (skill.skill_id.endsWith('-spins')) {
@@ -407,10 +407,10 @@ export async function generateReportCardPDF(
         const isMultiSelect = typeof skill.score === 'string' && (skill.score.includes(', ') || skill.skill_id === 'jump-grabs' || skill.skill_id === 'park-270-on-off' || skill.skill_id.endsWith('-spins') || skill.skill_id.endsWith('-forward'));
         if (isMultiSelect) {
           const options = (skill.score as string).split(', ');
-          // Grabs and Spins show all selections; others show only the last
-          const scoreInline = (skill.skill_id === 'jump-grabs' || skill.skill_id.endsWith('-spins'))
+          // Grabs show all selections; spins/slides/270 show only the last (highest)
+          const scoreInline = skill.skill_id === 'jump-grabs'
             ? options.join(' ')
-            : options[options.length - 1].replace(/\bRail\b/i, '').trim();
+            : options[options.length - 1].replace(/^Challenge Rail$/i, 'Challenge').trim();
           doc.setFontSize(8);
           // Spins left-aligned; grabs/slides/270 right-aligned to score position
           if (skill.skill_id.endsWith('-spins')) {

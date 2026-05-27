@@ -62,7 +62,7 @@ export default function Evaluations() {
   if (loading) {
     return (
       <div className="p-8">
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8 text-gray-600">Loading...</div>
       </div>
     )
   }
@@ -81,7 +81,7 @@ export default function Evaluations() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{athlete.full_name}</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900">{athlete.full_name}</h2>
             <p className="text-gray-500 text-sm">
               {evaluations.length} evaluation{evaluations.length !== 1 ? 's' : ''}
             </p>
@@ -97,15 +97,15 @@ export default function Evaluations() {
         </div>
 
         {/* Media Gallery */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-xl shadow p-6 mb-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Media Gallery</h3>
           <MediaGallery athleteId={athleteId!} isCoach={true} />
         </div>
 
         {/* Evaluations List */}
         {evaluations.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-500">No evaluations yet.</p>
+          <div className="text-center py-12 bg-white rounded-xl shadow">
+            <p className="text-gray-400 lg:text-gray-500">No evaluations yet.</p>
             <button
               onClick={() => navigate('/roster')}
               className="mt-4 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -116,14 +116,14 @@ export default function Evaluations() {
         ) : (
           <div className="space-y-4">
             {evaluations.map((evaluation, index) => (
-              <div key={evaluation.id} className="bg-white rounded-lg shadow p-6">
+              <div key={evaluation.id} className="bg-white rounded-xl shadow p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-lg font-medium text-gray-900">
                       Evaluation #{evaluations.length - index}
                     </h3>
                     {evaluation.group_name && (
-                      <p className="text-sm text-blue-600 mt-1">
+                      <p className="text-sm text-blue-400 lg:text-blue-600 mt-1">
                         Group: {evaluation.group_name}
                       </p>
                     )}

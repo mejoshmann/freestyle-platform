@@ -20,14 +20,14 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-freestyle-red shadow-lg z-50">
-        <div className="flex items-center justify-between p-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-gray-950 border-b-2 border-freestyle-red shadow-lg z-50">
+        <div className="flex items-center justify-between py-5 px-4">
           <h1 className="text-lg font-bold text-white">Freestyle Coach Platform</h1>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg hover:bg-white/10 text-white"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -38,18 +38,24 @@ export default function Sidebar() {
         </div>
         
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <nav className="bg-white border-t border-gray-100 px-4 py-2 shadow-lg">
-            {navItems.map((item) => (
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <nav className="bg-white border-t border-gray-100 px-4 py-2 shadow-2xl">
+            {navItems.map((item, index) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
+                style={{ transitionDelay: mobileMenuOpen ? `${index * 50}ms` : '0ms' }}
                 className={({ isActive }) =>
-                  `flex items-center px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-freestyle-red/10 text-freestyle-red font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  `flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+                    mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+                  } ${isActive
+                    ? 'bg-freestyle-red/10 text-freestyle-red font-medium'
+                    : 'text-gray-700 hover:bg-gray-100'
                   }`
                 }
               >
@@ -57,16 +63,18 @@ export default function Sidebar() {
                 {item.label}
               </NavLink>
             ))}
-            {bottomNavItems.map((item) => (
+            {bottomNavItems.map((item, index) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
+                style={{ transitionDelay: mobileMenuOpen ? `${(navItems.length + index) * 50}ms` : '0ms' }}
                 className={({ isActive }) =>
-                  `flex items-center px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-freestyle-red/10 text-freestyle-red font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  `flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+                    mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+                  } ${isActive
+                    ? 'bg-freestyle-red/10 text-freestyle-red font-medium'
+                    : 'text-gray-700 hover:bg-gray-100'
                   }`
                 }
               >
@@ -74,21 +82,30 @@ export default function Sidebar() {
                 {item.label}
               </NavLink>
             ))}
-            <button
-              onClick={signOut}
-              className="w-full mt-2 py-3 px-4 text-left text-gray-700 hover:bg-gray-50 rounded-lg"
-            >
-              Sign Out
-            </button>
-            <button
-              onClick={() => { setShowHelp(true); setMobileMenuOpen(false) }}
-              className="w-full mt-1 py-3 px-4 text-left text-gray-700 hover:bg-gray-50 rounded-lg flex items-center"
-            >
-              <span className="mr-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-              Help
-            </button>
+            <div className="border-t border-gray-100 mt-2 pt-2">
+              <button
+                onClick={signOut}
+                style={{ transitionDelay: mobileMenuOpen ? `${(navItems.length + bottomNavItems.length) * 50}ms` : '0ms' }}
+                className={`w-full py-3 px-4 text-left text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 flex items-center ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <span className="mr-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </span>
+                Sign Out
+              </button>
+              <button
+                onClick={() => { setShowHelp(true); setMobileMenuOpen(false) }}
+                style={{ transitionDelay: mobileMenuOpen ? `${(navItems.length + bottomNavItems.length + 1) * 50}ms` : '0ms' }}
+                className={`w-full py-3 px-4 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 flex items-center ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <span className="mr-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                Help
+              </button>
+            </div>
           </nav>
-        )}
+        </div>
       </div>
 
       {/* Desktop Sidebar */}

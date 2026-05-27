@@ -234,7 +234,7 @@ export default function Roster() {
   if (loading) {
     return (
       <div className="p-8">
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8 text-gray-600">Loading...</div>
       </div>
     )
   }
@@ -245,7 +245,7 @@ export default function Roster() {
         <div className="py-4 sm:py-6">
           {/* Header */}
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-3">
               {viewMode === 'my roster' ? 'My Roster' : 'All Athletes'}
             </h2>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -286,7 +286,7 @@ export default function Roster() {
 
           {/* Athletes Grid */}
           {filteredAthletes.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow px-4">
+            <div className="text-center py-12 bg-white rounded-xl shadow px-4">
               <p className="text-gray-500 mb-4">
                 {viewMode === 'my roster' 
                   ? 'No athletes in your roster yet. Switch to "All Athletes" to add some!'

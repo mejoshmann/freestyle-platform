@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DashboardCard from '../components/dashboard/DashboardCard'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +9,41 @@ interface RecentEvaluation {
   athlete_name: string
   created_at: string
   notes?: string
+}
+
+interface WeatherData {
+  temperature: number
+  weathercode: number
+  locationName?: string
+}
+
+function getTimeGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function formatDate(): string {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+function getWeatherInfo(code: number): { label: string; emoji: string } {
+  if (code === 0) return { label: 'Clear sky', emoji: '☀️' }
+  if (code >= 1 && code <= 3) return { label: 'Partly cloudy', emoji: '⛅' }
+  if (code >= 45 && code <= 48) return { label: 'Foggy', emoji: '🌫️' }
+  if (code >= 51 && code <= 55) return { label: 'Drizzle', emoji: '🌧️' }
+  if (code >= 61 && code <= 65) return { label: 'Rain', emoji: '🌧️' }
+  if (code >= 71 && code <= 77) return { label: 'Snow', emoji: '❄️' }
+  if (code >= 80 && code <= 82) return { label: 'Rain showers', emoji: '🌦️' }
+  if (code >= 85 && code <= 86) return { label: 'Snow showers', emoji: '🌨️' }
+  if (code >= 95 && code <= 99) return { label: 'Thunderstorm', emoji: '⛈️' }
+  return { label: 'Unknown', emoji: '🌡️' }
 }
 
 export default function Dashboard() {
@@ -22,12 +57,61 @@ export default function Dashboard() {
   })
   const [recentActivity, setRecentActivity] = useState<RecentEvaluation[]>([])
   const [loading, setLoading] = useState(true)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [weatherLoading, setWeatherLoading] = useState(true)
+  const [weatherError, setWeatherError] = useState<string | null>(null)
+  const [athletesEvaluated, setAthletesEvaluated] = useState(0)
+
+  const fetchWeather = useCallback(() => {
+    setWeatherLoading(true)
+    setWeatherError(null)
+
+    if (!navigator.geolocation) {
+      setWeatherError('Location unavailable')
+      setWeatherLoading(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          const [weatherRes, geoRes] = await Promise.all([
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=celsius`),
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`),
+          ])
+          if (!weatherRes.ok) throw new Error('Weather fetch failed')
+          const data = await weatherRes.json()
+          const geoData = await geoRes.json()
+          const locationName = geoData.address?.city || geoData.address?.town || geoData.address?.village || undefined
+          setWeather({
+            temperature: data.current_weather.temperature,
+            weathercode: data.current_weather.weathercode,
+            locationName,
+          })
+        } catch {
+          setWeatherError('Weather unavailable')
+        } finally {
+          setWeatherLoading(false)
+        }
+      },
+      () => {
+        setWeatherError('Location unavailable')
+        setWeatherLoading(false)
+      },
+      { timeout: 8000 }
+    )
+  }, [])
 
   useEffect(() => {
     if (coach) {
       loadDashboardData()
     }
   }, [coach])
+
+  useEffect(() => {
+    fetchWeather()
+  }, [fetchWeather])
 
   async function loadDashboardData() {
     if (!coach) return
@@ -65,6 +149,19 @@ export default function Dashboard() {
       templates: templatesCount || 0,
       totalEvaluations: totalEvaluations || 0
     })
+
+    // Get count of distinct athletes evaluated (for progress indicator)
+    if (myAthletesCount && myAthletesCount > 0) {
+      const { data: evaluatedAthletes } = await supabase
+        .from('evaluations')
+        .select('athlete_id')
+        .eq('coach_id', coach.id)
+
+      if (evaluatedAthletes) {
+        const uniqueAthletes = new Set(evaluatedAthletes.map(e => e.athlete_id))
+        setAthletesEvaluated(uniqueAthletes.size)
+      }
+    }
 
     // Get recent evaluations with athlete names
     const { data: recentEvals } = await supabase
@@ -112,19 +209,100 @@ export default function Dashboard() {
     return date.toLocaleDateString()
   }
 
+  const greeting = getTimeGreeting()
+  const weatherInfo = weather ? getWeatherInfo(weather.weathercode) : null
+  const evalProgress = stats.myAthletes > 0
+    ? Math.round((athletesEvaluated / stats.myAthletes) * 100)
+    : 0
+
   return (
-    <div className="p-3 sm:p-4 lg:p-8">
-      {/* Welcome Section */}
-      <div className="mb-4 sm:mb-8 border-l-4 border-freestyle-red pl-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Welcome Back{coach?.full_name ? `, ${coach.full_name}` : ''}
+    <div className="p-5 sm:p-4 lg:p-8 space-y-6">
+      {/* Greeting + Date */}
+      <div className="border-l-4 border-freestyle-red pl-4 pt-8 pb-2">
+        <h1 className="text-3xl sm:text-3xl font-bold tracking-tight text-gray-900">
+          {greeting}{coach?.full_name ? `, ` : ''}{coach?.full_name ? <span className="text-freestyle-red">{coach.full_name}</span> : ''}
         </h1>
-        <p className="text-gray-500 mt-2">Manage your athletes and evaluations</p>
+        <p className="text-gray-500 text-sm font-medium mt-1">{formatDate()}</p>
+      </div>
+
+      {/* Weather Widget */}
+      <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-lg p-4">
+        {weatherLoading ? (
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌤️</span>
+            <div>
+              <p className="text-gray-400 text-sm">Loading weather…</p>
+            </div>
+          </div>
+        ) : weatherError ? (
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📍</span>
+            <div>
+              <p className="text-gray-500 text-sm font-medium">{weatherError}</p>
+            </div>
+          </div>
+        ) : weather && weatherInfo ? (
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{weatherInfo.emoji}</span>
+            <div>
+              <div className="flex items-baseline gap-2">
+                <p className="text-3xl font-bold text-gray-900">{Math.round(weather.temperature)}°C</p>
+                {weather.locationName && (
+                  <p className="text-gray-500 text-sm font-medium">{weather.locationName}</p>
+                )}
+              </div>
+              <p className="text-gray-500 text-sm">{weatherInfo.label}</p>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Stats Overview */}
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-3 sm:mb-4">Overview</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-xl shadow-md hover:shadow-xl cursor-pointer transition-shadow border-t-4 border-freestyle-red">
+            <p className="text-sm text-gray-500">My Athletes</p>
+            <p className="text-2xl sm:text-3xl font-bold text-blue-600 mt-1 sm:mt-2">
+              {loading ? '--' : stats.myAthletes}
+            </p>
+          </div>
+          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-xl shadow-md hover:shadow-xl cursor-pointer transition-shadow border-t-4 border-green-500">
+            <p className="text-sm text-gray-500">Evaluations Today</p>
+            <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">
+              {loading ? '--' : stats.evaluationsToday}
+            </p>
+          </div>
+          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-xl shadow-md hover:shadow-xl cursor-pointer transition-shadow border-t-4 border-gray-400">
+            <p className="text-sm text-gray-500">Total Evaluations</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
+              {loading ? '--' : stats.totalEvaluations}
+            </p>
+          </div>
+        </div>
+
+        {/* Season Progress */}
+        {stats.myAthletes > 0 && !loading && (
+          <div className="mt-4 bg-white rounded-xl shadow-md p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-gray-700">Athletes Evaluated</p>
+              <p className="text-sm font-medium text-gray-500">
+                {athletesEvaluated}/{stats.myAthletes}
+              </p>
+            </div>
+            <div className="bg-gray-100 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-red-500 to-red-600 rounded-full h-2 transition-all duration-500"
+                style={{ width: `${evalProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-4 sm:mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
           <DashboardCard
             title="My Roster"
@@ -139,35 +317,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="mb-4 sm:mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-3 sm:mb-4">Overview</h2>
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
-          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow border-t-4 border-freestyle-red">
-            <p className="text-sm text-gray-500">My Athletes</p>
-            <p className="text-2xl sm:text-3xl font-bold text-blue-600 mt-1 sm:mt-2">
-              {loading ? '--' : stats.myAthletes}
-            </p>
-          </div>
-          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow border-t-4 border-green-500">
-            <p className="text-sm text-gray-500">Evaluations Today</p>
-            <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">
-              {loading ? '--' : stats.evaluationsToday}
-            </p>
-          </div>
-          <div onClick={() => navigate('/roster')} className="bg-white p-3 sm:p-6 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow border-t-4 border-gray-400">
-            <p className="text-sm text-gray-500">Total Evaluations</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-              {loading ? '--' : stats.totalEvaluations}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Recent Activity */}
       <div>
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
-        <div className="bg-white rounded-lg shadow border-l-4 border-freestyle-red">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h2>
+        <div className="bg-white rounded-xl shadow-md border-l-4 border-freestyle-red">
           {loading ? (
             <div className="p-6 text-center">
               <p className="text-gray-500">Loading...</p>
@@ -178,7 +331,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-400">Start by adding athletes to your roster and creating evaluations</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-100">
               {recentActivity.map((activity) => (
                 <div key={activity.id} className="p-4 hover:bg-gray-50">
                   <div className="flex justify-between items-start">
@@ -192,7 +345,7 @@ export default function Dashboard() {
                         </p>
                       )}
                     </div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-500">
                       {formatTimeAgo(activity.created_at)}
                     </span>
                   </div>
