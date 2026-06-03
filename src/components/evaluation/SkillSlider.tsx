@@ -500,8 +500,8 @@ export default function SkillSlider({ skill, value, onChange, notes, onNotesChan
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span className="text-left">{isTerrain ? 'Green' : 'N/A'}</span>
             <span className="text-left">{isAttendance || isAttitudeEngagement || isParkSafety || isTerrain ? '' : 'Tried it'}</span>
-            <span>{isTerrain ? 'Green | Blue' : ''}</span>
-            <span></span>
+            <span>{isTerrain ? 'Green | Blue' : isAttendance || isAttitudeEngagement || isParkSafety ? '' : 'Partial'}</span>
+            <span>{isAttendance || isAttitudeEngagement || isParkSafety || isTerrain ? '' : 'Consistent'}</span>
             <span className="text-right">{isAttendance ? '100%' : isAttitudeEngagement ? 'Stoked' : isParkSafety ? 'Safe' : isTerrain ? 'Blue' : 'Stomped it'}</span>
           </div>
         </>
