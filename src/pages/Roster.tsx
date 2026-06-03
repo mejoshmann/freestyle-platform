@@ -40,6 +40,10 @@ export default function Roster() {
   const [viewMode, setViewMode] = useState<'my roster' | 'all athletes'>('my roster')
   const [myRosterIds, setMyRosterIds] = useState<Set<string>>(new Set())
 
+  // Coach & Mountain filters
+  const [filterCoach, setFilterCoach] = useState<string>('')
+  const [filterMountain, setFilterMountain] = useState<string>('')
+
   // All skills from all categories (dynamic based on selected program)
   const activeTemplates = selectedProgramType === 'fundamentalz'
     ? fundamentalzTemplates
@@ -226,8 +230,13 @@ export default function Roster() {
     ? athletes.filter(a => myRosterIds.has(a.id))
     : athletes
   
+  const uniqueCoaches = Array.from(new Set(athletesToFilter.map(a => a.coach_name).filter(Boolean))).sort()
+  const uniqueMountains = Array.from(new Set(athletesToFilter.map(a => a.mountain).filter(Boolean))).sort()
+
   // Filter athletes
-  const filteredAthletes = athletesToFilter.filter(() => {
+  const filteredAthletes = athletesToFilter.filter(athlete => {
+    if (filterCoach && athlete.coach_name !== filterCoach) return false
+    if (filterMountain && athlete.mountain !== filterMountain) return false
     return true
   })
 
@@ -280,13 +289,39 @@ export default function Roster() {
             </div>
           </div>
 
-          {/* Filters removed - coach dropdown was confusing */}
+          {/* Filter bar */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <select
+              value={filterMountain}
+              onChange={(e) => setFilterMountain(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-freestyle-red/20 focus:border-freestyle-red transition-all"
+            >
+              <option value="">All Mountains</option>
+              {uniqueMountains.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
 
+            <select
+              value={filterCoach}
+              onChange={(e) => setFilterCoach(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-freestyle-red/20 focus:border-freestyle-red transition-all"
+            >
+              <option value="">All Coaches</option>
+              {uniqueCoaches.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
 
+            {(filterCoach || filterMountain) && (
+              <button
+                onClick={() => { setFilterCoach(''); setFilterMountain(''); }}
+                className="px-4 py-2.5 text-sm font-medium text-freestyle-red hover:bg-red-50 rounded-xl transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
 
           {/* Athletes Grid */}
           {filteredAthletes.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl shadow px-4">
+            <div className="text-center py-12 mt-6 bg-white rounded-xl shadow px-4">
               <p className="text-gray-500 mb-4">
                 {viewMode === 'my roster' 
                   ? 'No athletes in your roster yet. Switch to "All Athletes" to add some!'
@@ -302,7 +337,7 @@ export default function Roster() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6">
               {filteredAthletes.map(athlete => {
                 const evalCount = evaluationCounts[athlete.id] || 0
                 const isInMyRoster = myRosterIds.has(athlete.id)
