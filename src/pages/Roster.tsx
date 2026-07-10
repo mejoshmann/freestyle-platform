@@ -240,6 +240,92 @@ export default function Roster() {
     return true
   })
 
+  // Dynamically discover group_name values and group athletes
+  const teamGroups = Array.from(
+    new Set(
+      filteredAthletes
+        .map(a => a.group_name)
+        .filter((name): name is string => !!name)
+    )
+  ).sort()
+  const groupedAthletes: Record<string, Athlete[]> = {}
+  teamGroups.forEach(g => { groupedAthletes[g] = [] })
+  const ungroupedAthletes: Athlete[] = []
+
+  if (viewMode === 'all athletes') {
+    filteredAthletes.forEach(athlete => {
+      if (athlete.group_name && teamGroups.includes(athlete.group_name)) {
+        groupedAthletes[athlete.group_name].push(athlete)
+      } else {
+        ungroupedAthletes.push(athlete)
+      }
+    })
+  } else {
+    ungroupedAthletes.push(...filteredAthletes)
+  }
+
+  // Helper to render an athlete card with overlay buttons
+  function renderAthleteCard(athlete: Athlete) {
+    const evalCount = evaluationCounts[athlete.id] || 0
+    const isInMyRoster = myRosterIds.has(athlete.id)
+    const stats = [
+      { label: 'Age', value: athlete.date_of_birth ? calculateAge(athlete.date_of_birth) : 'N/A' },
+      { label: 'Evaluations', value: String(evalCount) },
+    ]
+    if (athlete.mountain) stats.push({ label: 'Mountain', value: athlete.mountain })
+    if (athlete.day) stats.push({ label: 'Day', value: athlete.day })
+    if (athlete.coach_name) stats.push({ label: 'Coach', value: athlete.coach_name })
+
+    return (
+      <div key={athlete.id} className="relative">
+        <AthleteCard
+          id={athlete.id}
+          name={athlete.full_name}
+          stats={stats}
+          onClick={() => {
+            setSelectedAthlete(athlete)
+            setShowProgramSelector(true)
+          }}
+          onDelete={viewMode === 'my roster' ? () => setShowDeleteConfirm(athlete.id) : undefined}
+          onViewMedia={() => {
+            setMediaAthlete(athlete)
+            setShowMediaModal(true)
+          }}
+        />
+        {viewMode === 'all athletes' && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isInMyRoster) {
+                removeFromMyRoster(athlete.id)
+              } else {
+                addToMyRoster(athlete.id)
+              }
+            }}
+            className={`absolute top-2 right-2 text-xs px-2 py-1 rounded ${
+              isInMyRoster
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+          >
+            {isInMyRoster ? <><svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Added</> : <><svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Add</>}
+          </button>
+        )}
+        {evalCount > 0 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/evaluations/${athlete.id}`)
+            }}
+            className="absolute top-2 right-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+          >
+            View
+          </button>
+        )}
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="p-8">
@@ -337,70 +423,28 @@ export default function Roster() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6">
-              {filteredAthletes.map(athlete => {
-                const evalCount = evaluationCounts[athlete.id] || 0
-                const isInMyRoster = myRosterIds.has(athlete.id)
-                const stats = [
-                  { label: 'Age', value: athlete.date_of_birth ? calculateAge(athlete.date_of_birth) : 'N/A' },
-                  { label: 'Evaluations', value: String(evalCount) },
-                ]
-                // Add group info if available
-                if (athlete.mountain) stats.push({ label: 'Mountain', value: athlete.mountain })
-                if (athlete.day) stats.push({ label: 'Day', value: athlete.day })
-                if (athlete.coach_name) stats.push({ label: 'Coach', value: athlete.coach_name })
-                
+            <>
+              {/* Main ungrouped grid */}
+              {ungroupedAthletes.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6">
+                  {ungroupedAthletes.map(renderAthleteCard)}
+                </div>
+              )}
+
+              {/* Grouped team sections (All Athletes only) */}
+              {viewMode === 'all athletes' && teamGroups.map(groupName => {
+                const group = groupedAthletes[groupName]
+                if (!group || group.length === 0) return null
                 return (
-                  <div key={athlete.id} className="relative">
-                    <AthleteCard
-                      id={athlete.id}
-                      name={athlete.full_name}
-                      stats={stats}
-                      onClick={() => {
-                        setSelectedAthlete(athlete)
-                        setShowProgramSelector(true)
-                      }}
-                      onDelete={viewMode === 'my roster' ? () => setShowDeleteConfirm(athlete.id) : undefined}
-                      onViewMedia={() => {
-                        setMediaAthlete(athlete)
-                        setShowMediaModal(true)
-                      }}
-                    />
-                    {/* Add/Remove button for All Athletes view */}
-                    {viewMode === 'all athletes' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (isInMyRoster) {
-                            removeFromMyRoster(athlete.id)
-                          } else {
-                            addToMyRoster(athlete.id)
-                          }
-                        }}
-                        className={`absolute top-2 right-2 text-xs px-2 py-1 rounded ${
-                          isInMyRoster
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        }`}
-                      >
-                        {isInMyRoster ? <><svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Added</> : <><svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Add</>}
-                      </button>
-                    )}
-                    {evalCount > 0 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigate(`/evaluations/${athlete.id}`)
-                        }}
-                        className="absolute top-2 right-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
-                      >
-                        View
-                      </button>
-                    )}
+                  <div key={groupName}>
+                    <h3 className="text-xl font-bold text-gray-900 mt-8 mb-4">{groupName}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {group.map(renderAthleteCard)}
+                    </div>
                   </div>
                 )
               })}
-            </div>
+            </>
           )}
         </div>
       </div>
