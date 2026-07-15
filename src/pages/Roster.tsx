@@ -34,6 +34,7 @@ export default function Roster() {
   const [showMediaModal, setShowMediaModal] = useState(false)
   const [mediaAthlete, setMediaAthlete] = useState<Athlete | null>(null)
   const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   
   // View mode: 'my roster' or 'all athletes'
@@ -115,55 +116,56 @@ export default function Roster() {
     groupName: string,
     categoryNotes?: Record<string, string>
   ) {
-    if (!coach || !selectedAthlete) return
+    if (!coach || !selectedAthlete || isSubmitting) return
+    setIsSubmitting(true)
 
-    const insertData = {
-      athlete_id: selectedAthlete.id,
-      coach_id: coach.id,
-      skill_scores: scores,
-      notes,
-      group_name: groupName || null,
-      category_notes: categoryNotes || null,
-      program_type: selectedProgramType
-    }
-
-    const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
-
-    if (error) {
-      alert('Error saving evaluation: ' + error.message)
-      return
-    }
-    
-    console.log('Evaluation saved:', evaluationData)
-    
-    // Create report card for admin review
-    if (evaluationData && evaluationData[0]) {
-      console.log('Creating report card for evaluation:', evaluationData[0].id)
-      const { data: reportCardData, error: reportCardError } = await supabase.from('report_cards').insert({
-        evaluation_id: evaluationData[0].id,
+    try {
+      const insertData = {
         athlete_id: selectedAthlete.id,
         coach_id: coach.id,
-        status: 'pending'
-      }).select()
-      
-      if (reportCardError) {
-        console.error('Error creating report card:', reportCardError)
-        alert('Evaluation saved but report card creation failed: ' + reportCardError.message)
-      } else {
-        console.log('Report card created:', reportCardData)
+        skill_scores: scores,
+        notes,
+        group_name: groupName || null,
+        category_notes: categoryNotes || null,
+        program_type: selectedProgramType
       }
-    } else {
-      console.error('No evaluation data returned after insert')
-      alert('Error: Evaluation was not saved properly')
-      return
+
+      const { data: evaluationData, error } = await supabase.from('evaluations').insert(insertData).select()
+
+      if (error) {
+        alert('Error saving evaluation: ' + error.message)
+      } else if (!evaluationData || !evaluationData[0]) {
+        console.error('No evaluation data returned after insert')
+        alert('Error: Evaluation was not saved properly')
+      } else {
+        console.log('Evaluation saved:', evaluationData)
+        
+        // Create report card for admin review
+        console.log('Creating report card for evaluation:', evaluationData[0].id)
+        const { data: reportCardData, error: reportCardError } = await supabase.from('report_cards').insert({
+          evaluation_id: evaluationData[0].id,
+          athlete_id: selectedAthlete.id,
+          coach_id: coach.id,
+          status: 'pending'
+        }).select()
+        
+        if (reportCardError) {
+          console.error('Error creating report card:', reportCardError)
+          alert('Evaluation saved but report card creation failed: ' + reportCardError.message)
+        } else {
+          console.log('Report card created:', reportCardData)
+        }
+        
+        // Refresh evaluation counts
+        await loadData()
+        
+        setSelectedAthlete(null)
+        setShowEvaluation(false)
+        alert('Evaluation submitted for admin review!')
+      }
+    } finally {
+      setIsSubmitting(false)
     }
-    
-    // Refresh evaluation counts
-    await loadData()
-    
-    setSelectedAthlete(null)
-    setShowEvaluation(false)
-    alert('Evaluation submitted for admin review!')
   }
 
   async function addToMyRoster(athleteId: string) {
@@ -588,6 +590,7 @@ export default function Roster() {
               athleteName={selectedAthlete.full_name}
               skills={selectedMetricsSet?.skills || allSkills}
               categories={selectedMetricsSet?.categories}
+              isSubmitting={isSubmitting}
               onSave={handleSaveEvaluation}
               onCancel={() => {
                 setSelectedAthlete(null)

@@ -11,6 +11,7 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
   const [videos, setVideos] = useState<AthleteVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<AthleteVideo | null>(null)
+  const [videoError, setVideoError] = useState(false)
 
   useEffect(() => {
     loadVideos()
@@ -68,7 +69,10 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
           <div key={video.id} className="bg-white rounded-lg shadow overflow-hidden">
             <div 
               className="relative aspect-video bg-black cursor-pointer"
-              onClick={() => setSelectedVideo(video)}
+              onClick={() => {
+                setVideoError(false)
+                setSelectedVideo(video)
+              }}
             >
               <video
                 src={video.public_url}
@@ -113,15 +117,32 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
           onClick={() => setSelectedVideo(null)}
         >
           <div className="max-w-4xl w-full">
-            <video
-              src={selectedVideo.public_url}
-              controls
-              autoPlay
-              playsInline
-              className="w-full rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-              onError={(e) => console.error('Video playback error:', e.currentTarget.error?.code, e.currentTarget.error?.message)}
-            />
+            {videoError ? (
+              <div className="bg-gray-900 rounded-lg p-8 text-center" onClick={(e) => e.stopPropagation()}>
+                <p className="text-white text-lg mb-4">This video format is not supported in your browser</p>
+                <a
+                  href={selectedVideo.public_url}
+                  download
+                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Download Video
+                </a>
+              </div>
+            ) : (
+              <video
+                src={selectedVideo.public_url}
+                controls
+                autoPlay
+                playsInline
+                className="w-full rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+                onError={(e) => {
+                  console.error('Video playback error:', e.currentTarget.error?.code, e.currentTarget.error?.message)
+                  setVideoError(true)
+                }}
+              />
+            )}
             <button
               onClick={() => setSelectedVideo(null)}
               className="absolute top-4 right-4 text-white hover:text-gray-300"

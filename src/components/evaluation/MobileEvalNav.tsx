@@ -5,9 +5,10 @@ interface MobileEvalNavProps {
   onCaptureMedia: (file: File) => void
   onUploadMedia: (file: File) => void
   onSave: () => void
+  isSubmitting?: boolean
 }
 
-export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onUploadMedia, onSave }: MobileEvalNavProps) {
+export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onUploadMedia, onSave, isSubmitting }: MobileEvalNavProps) {
   return (
     <>
       {/* Bottom Navigation Bar */}
@@ -33,14 +34,15 @@ export default function MobileEvalNav({ onBackToRoster, onCaptureMedia, onUpload
           {/* Save Evaluation */}
           <button
             onClick={onSave}
-            className="flex flex-col items-center p-2 text-blue-600 hover:text-blue-700 active:text-blue-800"
+            disabled={isSubmitting}
+            className={`flex flex-col items-center p-2 ${isSubmitting ? 'opacity-50 pointer-events-none' : 'text-blue-600 hover:text-blue-700 active:text-blue-800'}`}
           >
             <div className="rounded-full p-2 bg-blue-100">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="text-xs mt-1 font-medium">Save</span>
+            <span className="text-xs mt-1 font-medium">{isSubmitting ? 'Saving...' : 'Save'}</span>
           </button>
         </div>
       </div>

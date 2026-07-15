@@ -5,9 +5,10 @@ interface DesktopActionsProps {
   onCancel: () => void
   onCaptureMedia?: (file: File) => void
   onUploadMedia?: (file: File) => void
+  isSubmitting?: boolean
 }
 
-export default function DesktopActions({ onSave, onCancel, onCaptureMedia, onUploadMedia }: DesktopActionsProps) {
+export default function DesktopActions({ onSave, onCancel, onCaptureMedia, onUploadMedia, isSubmitting }: DesktopActionsProps) {
   return (
     <div className="hidden sm:flex flex-col space-y-4">
       {/* Media Actions */}
@@ -25,9 +26,10 @@ export default function DesktopActions({ onSave, onCancel, onCaptureMedia, onUpl
       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
         <button
           onClick={onSave}
-          className="flex-1 py-3 sm:py-2 px-4 bg-blue-600 text-white rounded-lg sm:rounded hover:bg-blue-700 font-medium"
+          disabled={isSubmitting}
+          className={`flex-1 py-3 sm:py-2 px-4 ${isSubmitting ? 'bg-blue-400 cursor-not-allowed opacity-50' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg sm:rounded font-medium`}
         >
-          Save Evaluation
+          {isSubmitting ? 'Saving...' : 'Save Evaluation'}
         </button>
         <button
           onClick={onCancel}

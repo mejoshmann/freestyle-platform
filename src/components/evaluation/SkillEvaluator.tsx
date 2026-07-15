@@ -40,6 +40,7 @@ interface SkillEvaluatorProps {
   onSave: (scores: SkillScore[], notes: string, groupName: string, categoryNotes?: Record<string, string>, voiceNotes?: string[]) => void
   onCancel: () => void
   onBackToRoster?: () => void
+  isSubmitting?: boolean
 }
 
 export default function SkillEvaluator({ 
@@ -50,7 +51,8 @@ export default function SkillEvaluator({
   programType,
   onSave, 
   onCancel, 
-  onBackToRoster 
+  onBackToRoster,
+  isSubmitting 
 }: SkillEvaluatorProps) {
   const { coach } = useAuth()
   // State
@@ -234,6 +236,7 @@ export default function SkillEvaluator({
         onCancel={onCancel} 
         onCaptureMedia={handleCaptureMedia}
         onUploadMedia={handleUploadMedia}
+        isSubmitting={isSubmitting}
       />
 
       {/* Mobile Bottom Navigation */}
@@ -242,6 +245,7 @@ export default function SkillEvaluator({
         onCaptureMedia={handleCaptureMedia}
         onUploadMedia={handleUploadMedia}
         onSave={handleSave}
+        isSubmitting={isSubmitting}
       />
     </div>
   )
