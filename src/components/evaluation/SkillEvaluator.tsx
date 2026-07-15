@@ -37,7 +37,7 @@ interface SkillEvaluatorProps {
   skills: Skill[]
   categories?: TemplateCategory[]
   programType?: string
-  onSave: (scores: SkillScore[], notes: string, groupName: string, categoryNotes?: Record<string, string>, voiceNotes?: string[]) => void
+  onSave: (scores: SkillScore[], notes: string, groupName: string, categoryNotes?: Record<string, string>) => void
   onCancel: () => void
   onBackToRoster?: () => void
   isSubmitting?: boolean

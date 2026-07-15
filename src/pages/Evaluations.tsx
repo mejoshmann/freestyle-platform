@@ -209,11 +209,26 @@ export default function Evaluations() {
                   </div>
                 </div>
 
-                {/* Notes */}
+                {/* Overall Notes */}
                 {evaluation.notes && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">Notes</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-1">Overall Feedback</h4>
                     <p className="text-sm text-gray-600 bg-gray-50 rounded p-3">{evaluation.notes}</p>
+                  </div>
+                )}
+
+                {/* Category Notes */}
+                {evaluation.category_notes && Object.keys(evaluation.category_notes).length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Coach Notes</h4>
+                    <div className="space-y-2">
+                      {Object.entries(evaluation.category_notes).filter(([, note]) => note && note.trim()).map(([category, note]) => (
+                        <div key={category} className="bg-gray-50 rounded p-3">
+                          <span className="text-xs font-medium text-gray-500 uppercase">{category}</span>
+                          <p className="text-sm text-gray-600 mt-1">{note}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

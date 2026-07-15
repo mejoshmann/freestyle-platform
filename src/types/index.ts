@@ -62,8 +62,6 @@ export interface Evaluation {
   template_id?: string
   skill_scores: SkillScore[]
   notes?: string
-  voice_notes?: string[]
-  transcribed_notes?: string
   category_notes?: Record<string, string>
   group_name?: string
   program_type?: string
