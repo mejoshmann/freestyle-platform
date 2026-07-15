@@ -99,10 +99,15 @@ create policy "Coaches can update athletes"
   to authenticated
   using (true);
 
-create policy "Coaches can delete athletes"
+create policy "Admins can delete athletes"
   on athletes for delete
   to authenticated
-  using (true);
+  using (
+    exists (
+      select 1 from coaches c
+      where c.id = auth.uid() and c.is_admin = true
+    )
+  );
 
 -- Enable RLS on coach_roster
 alter table coach_roster enable row level security;
@@ -341,6 +346,30 @@ create policy "Public video access"
 create policy "Public photo access"
   on storage.objects for select
   using (bucket_id = 'athlete-photos');
+
+-- Allow authenticated coaches to upload photos
+create policy "Coaches can upload photos"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'athlete-photos');
+
+-- Allow authenticated coaches to upload videos
+create policy "Coaches can upload videos"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'athlete-videos');
+
+-- Allow authenticated coaches to delete their own photos
+create policy "Coaches can delete photos"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'athlete-photos');
+
+-- Allow authenticated coaches to delete their own videos
+create policy "Coaches can delete videos"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'athlete-videos');
 
 -- Trigger to automatically create coach profile on user signup
 create or replace function public.handle_new_user()
