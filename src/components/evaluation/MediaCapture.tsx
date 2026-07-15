@@ -3,6 +3,9 @@ interface MediaCaptureProps {
 }
 
 export function MediaCaptureButton({ onCapture }: MediaCaptureProps) {
+  // Media upload temporarily disabled
+  return null
+
   function handleCapture() {
     const input = document.createElement('input')
     input.type = 'file'
@@ -32,6 +35,9 @@ export function MediaCaptureButton({ onCapture }: MediaCaptureProps) {
 }
 
 export function MediaUploadButton({ onCapture }: MediaCaptureProps) {
+  // Media upload temporarily disabled
+  return null
+
   function handleUpload() {
     const input = document.createElement('input')
     input.type = 'file'

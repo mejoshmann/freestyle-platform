@@ -630,8 +630,8 @@ export default function Roster() {
               </button>
             </div>
             <div className="p-4">
-              {/* Upload Button */}
-              <div className="mb-4 flex items-center space-x-3">
+              {/* Media upload temporarily disabled */}
+              {/* <div className="mb-4 flex items-center space-x-3">
                 <span className="text-sm text-gray-500">Add Media:</span>
                 <button
                   onClick={() => {
@@ -653,7 +653,7 @@ export default function Roster() {
                   </svg>
                   <span>Upload Photo/Video</span>
                 </button>
-              </div>
+              </div> */}
               <MediaGallery key={mediaRefreshKey} athleteId={mediaAthlete.id} isCoach={true} />
             </div>
           </div>
