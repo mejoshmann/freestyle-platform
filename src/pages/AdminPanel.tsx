@@ -1131,6 +1131,21 @@ export default function AdminPanel() {
                 )}
               </div>
 
+              {/* Category Notes (per-section coach comments) */}
+              {selectedEvaluation.category_notes && Object.keys(selectedEvaluation.category_notes).length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-bold text-lg mb-3 border-b pb-2">Category Notes</h4>
+                  <div className="space-y-2">
+                    {Object.entries(selectedEvaluation.category_notes).filter(([, note]: [string, any]) => note && String(note).trim()).map(([category, note]: [string, any]) => (
+                      <div key={category} className="bg-gray-50 rounded p-3">
+                        <span className="text-xs font-medium text-gray-500 uppercase">{category}</span>
+                        <p className="text-sm text-gray-700 mt-1">{String(note)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Editable Notes */}
               <div className="mb-6">
                 <label className="block font-bold text-lg mb-3 border-b pb-2">Coach Notes (Editable)</label>
