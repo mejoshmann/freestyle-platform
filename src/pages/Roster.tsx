@@ -292,10 +292,6 @@ export default function Roster() {
             setShowProgramSelector(true)
           }}
           onDelete={viewMode === 'my roster' ? () => setShowDeleteConfirm(athlete.id) : undefined}
-          onViewMedia={() => {
-            setMediaAthlete(athlete)
-            setShowMediaModal(true)
-          }}
         />
         {viewMode === 'all athletes' && (
           <button
