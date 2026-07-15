@@ -200,7 +200,9 @@ export default function Roster() {
   }
 
   // Handle media upload from roster modal
-  const handleUploadMedia = useCallback(async (file: File) => {
+  // Media upload temporarily disabled
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleUploadMedia = useCallback(async (file: File) => {
     if (!coach || !mediaAthlete) {
       alert('Cannot upload media: missing coach or athlete information')
       return
