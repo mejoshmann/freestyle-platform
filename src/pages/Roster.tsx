@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { Athlete, Skill, TemplateCategory } from '../types'
@@ -7,7 +7,7 @@ import { defaultTemplates, fundamentalzTemplates, freestylerzTemplates } from '.
 import AthleteCard from '../components/roster/AthleteCard'
 import SkillEvaluator from '../components/evaluation/SkillEvaluator'
 import MediaGallery from '../components/media/MediaGallery'
-import { uploadAthleteMedia } from '../lib/media'
+// import { uploadAthleteMedia } from '../lib/media' // Media upload temporarily disabled
 import { useNavigate } from 'react-router-dom'
 
 interface MetricsSet {
@@ -33,7 +33,7 @@ export default function Roster() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | 'all' | null>(null)
   const [showMediaModal, setShowMediaModal] = useState(false)
   const [mediaAthlete, setMediaAthlete] = useState<Athlete | null>(null)
-  const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
+  const [mediaRefreshKey] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   
@@ -201,8 +201,8 @@ export default function Roster() {
 
   // Handle media upload from roster modal
   // Media upload temporarily disabled
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _handleUploadMedia = useCallback(async (file: File) => {
+  /*
+  const handleUploadMedia = useCallback(async (file: File) => {
     if (!coach || !mediaAthlete) {
       alert('Cannot upload media: missing coach or athlete information')
       return
@@ -227,6 +227,7 @@ export default function Roster() {
       setMediaRefreshKey(prev => prev + 1)
     }
   }, [mediaAthlete, coach])
+  */
 
 
   // Compute unique filter values (from all athletes or just my roster)
