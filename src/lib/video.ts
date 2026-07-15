@@ -92,26 +92,33 @@ export async function getAthleteVideos(athleteId: string) {
 }
 
 export async function deleteAthleteVideo(videoId: string, storagePath: string) {
-  // Delete from storage
+  // Delete from database FIRST — if RLS blocks this, we don't want to orphan the storage file
+  const { data: deletedRows, error: dbError } = await supabase
+    .from('athlete_videos')
+    .delete()
+    .eq('id', videoId)
+    .select('id')  // returns deleted rows so we can verify the delete succeeded
+  
+  if (dbError) {
+    console.error('Database delete error:', dbError)
+    return { success: false, error: dbError.message }
+  }
+  
+  // If no rows were deleted, RLS policy blocked the operation (returns 200 with empty array, no error)
+  if (!deletedRows || deletedRows.length === 0) {
+    return { success: false, error: 'Permission denied — you can only delete videos you uploaded.' }
+  }
+  
+  // Now delete the file from storage
   const { error: storageError } = await supabase
     .storage
     .from('athlete-videos')
     .remove([storagePath])
   
   if (storageError) {
-    console.error('Storage delete error:', storageError)
-    return { success: false, error: storageError.message }
-  }
-  
-  // Delete from database
-  const { error: dbError } = await supabase
-    .from('athlete_videos')
-    .delete()
-    .eq('id', videoId)
-  
-  if (dbError) {
-    console.error('Database delete error:', dbError)
-    return { success: false, error: dbError.message }
+    // DB record is already deleted, but storage file remains — log as warning
+    console.warn('Storage delete failed (DB record already removed):', storageError)
+    // Still return success since the DB record was removed
   }
   
   return { success: true }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getAthleteMedia, deleteAthleteMedia, type MediaItem } from '../../lib/media'
+import { useAuth } from '../../context/AuthContext'
 
 interface MediaGalleryProps {
   athleteId: string
@@ -7,6 +8,7 @@ interface MediaGalleryProps {
 }
 
 export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) {
+  const { coach } = useAuth()
   const [media, setMedia] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null)
@@ -26,11 +28,16 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
   const handleDelete = async (item: MediaItem) => {
     if (!confirm(`Are you sure you want to delete this ${item.type}?`)) return
     
-    const result = await deleteAthleteMedia(item.id, item.storage_path, item.type)
-    if (result.success) {
-      setMedia(media.filter(m => m.id !== item.id))
-    } else {
-      alert(`Failed to delete ${item.type}: ` + result.error)
+    try {
+      const result = await deleteAthleteMedia(item.id, item.storage_path, item.type)
+      if (result.success) {
+        setMedia(prev => prev.filter(m => m.id !== item.id))
+      } else {
+        alert(`Failed to delete ${item.type}: ${result.error}`)
+      }
+    } catch (err) {
+      console.error('Unexpected delete error:', err)
+      alert(`Failed to delete ${item.type}: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -84,7 +91,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
                 
                 <div className="p-2">
                   <p className="text-xs text-gray-600">{formatDate(image.created_at)}</p>
-                  {isCoach && (
+                  {isCoach && image.coach_id === coach?.id && (
                     <button
                       onClick={() => handleDelete(image)}
                       className="mt-1 text-xs text-red-600 hover:text-red-800"
@@ -133,7 +140,7 @@ export default function MediaGallery({ athleteId, isCoach }: MediaGalleryProps) 
                   {video.description && (
                     <p className="text-sm text-gray-800 mt-1 line-clamp-2">{video.description}</p>
                   )}
-                  {isCoach && (
+                  {isCoach && video.coach_id === coach?.id && (
                     <button
                       onClick={() => handleDelete(video)}
                       className="mt-2 text-xs text-red-600 hover:text-red-800"

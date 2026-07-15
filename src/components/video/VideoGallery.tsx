@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getAthleteVideos, deleteAthleteVideo } from '../../lib/video'
+import { useAuth } from '../../context/AuthContext'
 import type { AthleteVideo } from '../../types'
 
 interface VideoGalleryProps {
@@ -8,6 +9,7 @@ interface VideoGalleryProps {
 }
 
 export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) {
+  const { coach } = useAuth()
   const [videos, setVideos] = useState<AthleteVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<AthleteVideo | null>(null)
@@ -27,11 +29,16 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
   const handleDelete = async (video: AthleteVideo) => {
     if (!confirm('Are you sure you want to delete this video?')) return
     
-    const result = await deleteAthleteVideo(video.id, video.storage_path)
-    if (result.success) {
-      setVideos(videos.filter(v => v.id !== video.id))
-    } else {
-      alert('Failed to delete video: ' + result.error)
+    try {
+      const result = await deleteAthleteVideo(video.id, video.storage_path)
+      if (result.success) {
+        setVideos(prev => prev.filter(v => v.id !== video.id))
+      } else {
+        alert('Failed to delete video: ' + result.error)
+      }
+    } catch (err) {
+      console.error('Unexpected delete error:', err)
+      alert('Failed to delete video: ' + (err instanceof Error ? err.message : 'Unknown error'))
     }
   }
 
@@ -97,7 +104,7 @@ export default function VideoGallery({ athleteId, isCoach }: VideoGalleryProps) 
               {video.description && (
                 <p className="text-sm text-gray-800 mt-1 line-clamp-2">{video.description}</p>
               )}
-              {isCoach && (
+              {isCoach && video.coach_id === coach?.id && (
                 <button
                   onClick={() => handleDelete(video)}
                   className="mt-2 text-xs text-red-600 hover:text-red-800"
