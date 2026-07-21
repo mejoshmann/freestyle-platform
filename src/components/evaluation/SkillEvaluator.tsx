@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Skill, SkillScore, TemplateCategory } from '../../types'
 import { uploadAthleteMedia } from '../../lib/media'
+import { autoCorrectText } from '../../lib/autoCorrect'
 import { useAuth } from '../../context/AuthContext'
 import EvalHeader from './EvalHeader'
 import SkillsList from './SkillsList'
@@ -41,6 +42,11 @@ interface SkillEvaluatorProps {
   onCancel: () => void
   onBackToRoster?: () => void
   isSubmitting?: boolean
+  initialScores?: SkillScore[]
+  initialNotes?: string
+  initialCategoryNotes?: Record<string, string>
+  initialGroupName?: string
+  evaluationId?: string
 }
 
 export default function SkillEvaluator({ 
@@ -52,21 +58,32 @@ export default function SkillEvaluator({
   onSave, 
   onCancel, 
   onBackToRoster,
-  isSubmitting 
+  isSubmitting,
+  initialScores,
+  initialNotes,
+  initialCategoryNotes,
+  initialGroupName,
+  evaluationId
 }: SkillEvaluatorProps) {
   const { coach } = useAuth()
   // State
   const [scores, setScores] = useState<SkillScore[]>(
-    skills.map(skill => ({
-      skill_id: skill.id,
-      skill_name: skill.name,
-      score: isToggleSkill(skill) ? null : 0,  // Toggle skills default to null, regular skills default to 0
-      notes: ''
-    }))
+    skills.map(skill => {
+      const existing = initialScores?.find(s => s.skill_id === skill.id)
+      if (existing) {
+        return { ...existing, skill_name: skill.name }
+      }
+      return {
+        skill_id: skill.id,
+        skill_name: skill.name,
+        score: isToggleSkill(skill) ? null : 0,
+        notes: ''
+      }
+    })
   )
-  const [notes, setNotes] = useState('')
-  const [groupName, setGroupName] = useState('')
-  const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
+  const [notes, setNotes] = useState(initialNotes || '')
+  const [groupName, setGroupName] = useState(initialGroupName || '')
+  const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>(initialCategoryNotes || {})
   const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
 
   // Computed values
@@ -162,6 +179,7 @@ export default function SkillEvaluator({
         athleteName={athleteName}
         evaluatedCount={evaluatedCount}
         onClose={onCancel}
+        isEdit={!!evaluationId}
       />
 
       {/* Media Gallery */}
@@ -195,7 +213,7 @@ export default function SkillEvaluator({
         </label>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => setNotes(autoCorrectText(e.target.value))}
           rows={3}
           maxLength={250}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -222,7 +240,7 @@ export default function SkillEvaluator({
           </label>
           <textarea
             value={categoryNotes['Goals for Next Season'] || ''}
-            onChange={(e) => handleCategoryNoteChange('Goals for Next Season', e.target.value)}
+            onChange={(e) => handleCategoryNoteChange('Goals for Next Season', autoCorrectText(e.target.value))}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="What are the goals and focus areas for next season?"

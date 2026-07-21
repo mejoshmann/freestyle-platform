@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Skill, SkillScore, TemplateCategory } from '../../types'
 import SkillSlider from './SkillSlider'
+import { autoCorrectText } from '../../lib/autoCorrect'
 
 interface SkillsListProps {
   skills: Skill[]
@@ -69,7 +70,7 @@ export default function SkillsList({ skills, categories, scores, onScoreChange, 
           {category.name !== 'Suggested Training' && category.name !== 'Programs for Next Season' && category.name !== 'Attendance' && (
             <textarea
               value={categoryNotes[category.name] || ''}
-              onChange={(e) => onCategoryNoteChange(category.name, e.target.value)}
+              onChange={(e) => onCategoryNoteChange(category.name, autoCorrectText(e.target.value))}
               placeholder={`Notes for ${category.name}...`}
               rows={1}
               maxLength={99}

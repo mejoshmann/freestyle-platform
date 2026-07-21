@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import MediaGallery from '../components/media/MediaGallery'
-import type { Athlete, SkillScore } from '../types'
+import SkillEvaluator from '../components/evaluation/SkillEvaluator'
+import { fundamentalzTemplates, freestylerzTemplates } from '../data/defaultTemplates'
+import type { Athlete, Skill, SkillScore, TemplateCategory } from '../types'
 
 interface Evaluation {
   id: string
@@ -24,6 +26,8 @@ export default function Evaluations() {
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingEvaluation, setEditingEvaluation] = useState<Evaluation | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function loadData() {
     if (!coach || !athleteId) {
@@ -31,15 +35,12 @@ export default function Evaluations() {
       return
     }
 
-
-
     // Load athlete details
     const { data: athleteData } = await supabase
       .from('athletes')
       .select('*')
       .eq('id', athleteId)
       .single()
-
 
     if (athleteData) setAthlete(athleteData)
 
@@ -50,7 +51,6 @@ export default function Evaluations() {
       .eq('athlete_id', athleteId)
       .eq('coach_id', coach.id)
 
-
     if (evaluationsData) setEvaluations(evaluationsData)
     setLoading(false)
   }
@@ -58,6 +58,63 @@ export default function Evaluations() {
   useEffect(() => {
     loadData()
   }, [athleteId, coach])
+
+  async function handleUpdateEvaluation(
+    scores: SkillScore[],
+    notes: string,
+    groupName: string,
+    categoryNotes?: Record<string, string>
+  ) {
+    if (!editingEvaluation || isSubmitting) return
+    setIsSubmitting(true)
+
+    try {
+      const { error } = await supabase
+        .from('evaluations')
+        .update({
+          skill_scores: scores,
+          notes,
+          group_name: groupName || null,
+          category_notes: categoryNotes || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingEvaluation.id)
+
+      if (error) {
+        alert('Error updating evaluation: ' + error.message)
+        return
+      }
+
+      // Reset linked report card status to pending for admin re-review
+      const { error: rcError } = await supabase
+        .from('report_cards')
+        .update({ status: 'pending' })
+        .eq('evaluation_id', editingEvaluation.id)
+
+      if (rcError) {
+        console.error('Error resetting report card status:', rcError)
+      }
+
+      setEditingEvaluation(null)
+      await loadData()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  function getSkillsForProgram(programType?: string): Skill[] {
+    const templates = programType === 'fundamentalz'
+      ? fundamentalzTemplates
+      : freestylerzTemplates
+    return templates.flatMap(t => t.skills)
+  }
+
+  function getCategoriesForProgram(programType?: string): TemplateCategory[] | undefined {
+    const templates = programType === 'fundamentalz'
+      ? fundamentalzTemplates
+      : freestylerzTemplates
+    return templates.map(t => ({ id: t.name.toLowerCase().replace(/\s+/g, '-'), name: t.name, skills: t.skills }))
+  }
 
   if (loading) {
     return (
@@ -150,6 +207,12 @@ export default function Evaluations() {
                         })}
                       </span>
                     )}
+                    <button
+                      onClick={() => setEditingEvaluation(evaluation)}
+                      className="ml-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
 
@@ -237,6 +300,29 @@ export default function Evaluations() {
           </div>
         )}
       </div>
+
+      {/* Edit Evaluation Modal */}
+      {editingEvaluation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="w-full sm:max-w-2xl bg-white rounded-t-lg sm:rounded-lg shadow-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <SkillEvaluator
+              athleteId={athleteId!}
+              athleteName={athlete?.full_name || ''}
+              skills={getSkillsForProgram(editingEvaluation.program_type)}
+              categories={getCategoriesForProgram(editingEvaluation.program_type)}
+              programType={editingEvaluation.program_type}
+              evaluationId={editingEvaluation.id}
+              initialScores={editingEvaluation.skill_scores}
+              initialNotes={editingEvaluation.notes || ''}
+              initialCategoryNotes={editingEvaluation.category_notes}
+              initialGroupName={editingEvaluation.group_name || ''}
+              onSave={handleUpdateEvaluation}
+              onCancel={() => setEditingEvaluation(null)}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

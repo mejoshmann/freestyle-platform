@@ -2,9 +2,10 @@ interface EvalHeaderProps {
   athleteName: string
   evaluatedCount: number
   onClose?: () => void
+  isEdit?: boolean
 }
 
-export default function EvalHeader({ athleteName, onClose }: EvalHeaderProps) {
+export default function EvalHeader({ athleteName, onClose, isEdit }: EvalHeaderProps) {
   return (
     <div className="flex items-center mb-4 sm:mb-6 pb-4 sm:pb-6 border-b">
       <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-blue-100 flex items-center justify-center">
@@ -14,6 +15,11 @@ export default function EvalHeader({ athleteName, onClose }: EvalHeaderProps) {
       </div>
       <div className="ml-3 sm:ml-4 flex-1">
         <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{athleteName}</h2>
+        {isEdit && (
+          <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+            Editing Evaluation
+          </span>
+        )}
       </div>
       {onClose && (
         <button
