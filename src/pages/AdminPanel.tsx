@@ -5,7 +5,44 @@ import { useAuth } from '../context/AuthContext'
 import CSVImport from '../components/import/CSVImport'
 import { generateReportCardPDF } from '../components/report/ReportCardPDF'
 import { sendReportCardEmail } from '../lib/email'
+import { fundamentalzTemplates, freestylerzTemplates } from '../data/defaultTemplates'
 import type { Athlete, Coach } from '../types'
+
+// Merge the program template's full skill list with the recorded skill_scores so
+// admins can score skills the coach left unrecorded. Recorded skills keep their
+// scores; unrecorded toggle skills (training-/program-) default to null, regular
+// skills default to 0 (matching SkillEvaluator's defaults). Each merged entry
+// carries a display-only `category` field used for grouping in the review modal.
+function buildMergedScores(evaluation: any): any[] {
+  const templates = evaluation.program_type === 'fundamentalz'
+    ? fundamentalzTemplates
+    : freestylerzTemplates
+  const recorded: any[] = evaluation.skill_scores || []
+  const isFreestylerz = evaluation.program_type !== 'fundamentalz'
+  const isToggleId = (id: string) => id.startsWith('training-') || id.startsWith('program-')
+  // Project rule: 'Spinning on Snow' must never appear for Freestylerz
+  const isExcluded = (id: string) => isFreestylerz && id === 'freeski-spinning'
+
+  const merged: any[] = []
+  const seen = new Set<string>()
+  for (const template of templates) {
+    for (const skill of template.skills) {
+      if (isExcluded(skill.id)) continue
+      seen.add(skill.id)
+      const existing = recorded.find(s => s.skill_id === skill.id)
+      merged.push(existing
+        ? { ...existing, skill_name: existing.skill_name || skill.name, category: template.name }
+        : { skill_id: skill.id, skill_name: skill.name, score: isToggleId(skill.id) ? null : 0, notes: '', category: template.name })
+    }
+  }
+  // Preserve any recorded skills not present in the current template (legacy data)
+  for (const s of recorded) {
+    if (!seen.has(s.skill_id) && !isExcluded(s.skill_id)) {
+      merged.push({ ...s })
+    }
+  }
+  return merged
+}
 
 interface ReportCard {
   id: string
@@ -291,7 +328,7 @@ export default function AdminPanel() {
     
     setSelectedReportCard(reportCard)
     setSelectedEvaluation(evaluation)
-        setEditableScores(evaluation.skill_scores || [])
+        setEditableScores(buildMergedScores(evaluation))
         setEditableNotes(evaluation.notes || '')
         setAdminNotes(reportCard.admin_notes || '')
         setEditableAthleteName(reportCard.athlete_name || '')
@@ -302,11 +339,21 @@ export default function AdminPanel() {
   async function updateEvaluationAndApprove() {
     if (!selectedReportCard || !selectedEvaluation) return
 
+    // Match SkillEvaluator's convention: drop still-unscored (null) skills, and
+    // strip the display-only `category` field before persisting
+    const scoresToSave = editableScores
+      .filter((s: any) => s.score !== null)
+      .map((s: any) => {
+        const copy = { ...s }
+        delete copy.category
+        return copy
+      })
+
     // Update the evaluation with admin edits
     const { error: evalError } = await supabase
       .from('evaluations')
       .update({
-        skill_scores: editableScores,
+        skill_scores: scoresToSave,
         notes: editableNotes,
         group_name: editableGroupName,
         updated_at: new Date().toISOString()
@@ -1048,8 +1095,17 @@ export default function AdminPanel() {
                         return false
                       }
                       
+                      // Show a category heading when the category changes (list is in template order)
+                      const showCategoryHeader = !!score.category && score.category !== editableScores[index - 1]?.category
+                      
                       return (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
+                        <div key={score.skill_id || index}>
+                          {showCategoryHeader && (
+                            <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider pt-3 pb-1">
+                              {score.category}
+                            </h5>
+                          )}
+                        <div className="flex items-center justify-between py-2 border-b border-gray-100">
                           <span className="font-medium flex-1">{score.skill_name}</span>
                           {isTrainingSkill ? (
                             // Single "Recommended" toggle for Training skills - click to select, click again to deselect
@@ -1122,6 +1178,7 @@ export default function AdminPanel() {
                               ))}
                             </div>
                           )}
+                        </div>
                         </div>
                       )
                     })}

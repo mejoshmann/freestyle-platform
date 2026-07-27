@@ -189,13 +189,18 @@ export async function generateReportCardPDF(
   );
   doc.text(`Season: ${season}`, margin, topThirdMiddle + 13);
 
-  // Athlete Evaluation notes under Season
+  // Athlete Evaluation notes under Season - centered vertically between Season line and Skills heading
   if (notes && notes.trim()) {
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.setFont("Montserrat", "normal");
     doc.setTextColor(...darkGray);
     const wrappedEvalNotes = doc.splitTextToSize(notes.trim(), pageWidth - margin * 2);
-    doc.text(wrappedEvalNotes, margin, topThirdMiddle + 18);
+    const seasonY = topThirdMiddle + 13;
+    const skillsHeadingY = thirdPage; // Y of "Athlete's Skills and Progressions" heading
+    const noteLineH = 3.5;
+    const blockSpan = (wrappedEvalNotes.length - 1) * noteLineH;
+    const centeredY = seasonY + ((skillsHeadingY - seasonY) - blockSpan) / 2;
+    doc.text(wrappedEvalNotes, margin, centeredY);
   }
 
   // Program type removed from PDF per user request
@@ -204,7 +209,7 @@ export async function generateReportCardPDF(
 
   const leftX = margin;
 
-  let currentY = thirdPage - 4;
+  let currentY = thirdPage;
 
   // Athlete's Skills and Progressions header
   doc.setFontSize(14);
@@ -476,44 +481,13 @@ export async function generateReportCardPDF(
   const hasTrainingOrPrograms =
     selectedTraining.length > 0 || selectedPrograms.length > 0;
 
-  // Collect all coach notes
-  const allCoachNotes: { category: string; note: string }[] = [];
-  if (categoryNotes) {
-    categories.forEach((cat) => {
-      if (categoryNotes[cat] && categoryNotes[cat].trim()) {
-        allCoachNotes.push({ category: cat, note: categoryNotes[cat].trim() });
-      }
-    });
-  }
-  const hasCoachNotes = allCoachNotes.length > 0;
+  // Goals for Next Season text (rendered under What's Next, only if present)
+  const goalsText = categoryNotes?.["Goals for Next Season"]?.trim() || "";
 
   // Only show bottom section if there's something to display
-  if (hasTrainingOrPrograms || hasCoachNotes) {
+  if (hasTrainingOrPrograms || goalsText) {
     // Center in bottom third: start at 2/3 + 1/6 = middle of bottom third
-    let bottomY = currentRowY + 2;
-
-    // Coach Notes section (above What's Next)
-    if (hasCoachNotes) {
-      doc.setFontSize(11);
-      doc.setFont("Montserrat", "bold");
-      doc.setTextColor(...brandBlue);
-      doc.text("Coach Notes:", leftX, bottomY);
-      bottomY += lineHeight;
-
-      doc.setFontSize(8);
-      doc.setFont("Montserrat", "normal");
-      doc.setTextColor(...darkGray);
-      allCoachNotes.forEach(({ category, note }) => {
-        doc.setFont("Montserrat", "bold");
-        doc.text(`${category}:`, leftX, bottomY);
-        const labelWidth = doc.getTextWidth(`${category}: `);
-        doc.setFont("Montserrat", "normal");
-        const wrappedNote = doc.splitTextToSize(note, pageWidth - margin * 2 - labelWidth);
-        doc.text(wrappedNote, leftX + labelWidth, bottomY);
-        bottomY += wrappedNote.length * 3.5 + 1;
-      });
-      bottomY += 4;
-    }
+    let bottomY = currentRowY + 6;
 
     // What's Next? header
     doc.setFontSize(11);
@@ -578,6 +552,24 @@ export async function generateReportCardPDF(
 
       // Use whichever column is taller
       bottomY = Math.max(bottomY, programsY) + 3;
+    }
+
+    // Goals for Next Season underneath What's Next (only if text exists)
+    if (goalsText) {
+      doc.setFontSize(10);
+      doc.setFont("Montserrat", "bold");
+      doc.setTextColor(...darkGray);
+      doc.text("Goals for Next Season:", leftX, bottomY);
+      const goalsHeadingWidth = doc.getTextWidth("Goals for Next Season:  ");
+      doc.setFontSize(9);
+      doc.setFont("Montserrat", "normal");
+      doc.setTextColor(...black);
+      const wrappedGoals = doc.splitTextToSize(
+        goalsText,
+        pageWidth - margin * 2 - goalsHeadingWidth,
+      );
+      doc.text(wrappedGoals, leftX + goalsHeadingWidth, bottomY);
+      bottomY += wrappedGoals.length * (lineHeight - 1);
     }
   }
 
