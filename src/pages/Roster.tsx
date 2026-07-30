@@ -68,7 +68,7 @@ export default function Roster() {
     if (athletesData) {
       setAthletes(athletesData)
       
-      // Fetch evaluation counts for each athlete (for this coach)
+      // Fetch evaluation counts and report card status for each athlete (for this coach)
       const athleteIds = athletesData.map(a => a.id)
       const { data: evaluationsData } = await supabase
         .from('evaluations')
@@ -81,6 +81,7 @@ export default function Roster() {
         counts[evaluation.athlete_id] = (counts[evaluation.athlete_id] || 0) + 1
       })
       setEvaluationCounts(counts)
+
     }
     
     // Load this coach's roster selections
@@ -286,6 +287,7 @@ export default function Roster() {
         <AthleteCard
           id={athlete.id}
           name={athlete.full_name}
+          hasReport={evalCount > 0}
           stats={stats}
           onClick={() => {
             setSelectedAthlete(athlete)

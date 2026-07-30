@@ -2,6 +2,7 @@ interface AthleteCardProps {
   id: string
   name: string
   imageUrl?: string
+  hasReport?: boolean
   stats: {
     label: string
     value: string
@@ -10,7 +11,7 @@ interface AthleteCardProps {
   onDelete?: () => void
 }
 
-export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete }: AthleteCardProps) {
+export default function AthleteCard({ name, imageUrl, hasReport, stats, onClick, onDelete }: AthleteCardProps) {
   return (
     <div 
       className="bg-white rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden active:scale-[0.98] group"
@@ -38,7 +39,14 @@ export default function AthleteCard({ name, imageUrl, stats, onClick, onDelete }
           onClick={onClick}
           className="ml-3 sm:ml-4 flex-1 min-w-0 cursor-pointer"
         >
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">{name}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">{name}</h3>
+            {hasReport && (
+              <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             {stats.map((stat, index) => (
               <div key={index} className="text-xs sm:text-sm">

@@ -81,6 +81,9 @@ export default function AdminPanel() {
   const [previewEvaluation, setPreviewEvaluation] = useState<any>(null)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
+  // Set of athlete IDs that have at least one evaluation (any coach, any status)
+  const athletesWithReports = new Set(evaluations.map(e => e.athlete_id))
+
   useEffect(() => {
     if (!coach?.is_admin) {
       navigate('/')
@@ -626,6 +629,11 @@ export default function AdminPanel() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {athlete.full_name}
+                          {athletesWithReports.has(athlete.id) && (
+                            <svg className="w-5 h-5 text-green-600 inline-block ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {athlete.email || '-'}
@@ -658,7 +666,14 @@ export default function AdminPanel() {
                           className="h-4 w-4 text-blue-600 rounded border-gray-300 mt-1"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 break-words">{athlete.full_name}</p>
+                          <p className="text-sm font-medium text-gray-900 break-words">
+                            {athlete.full_name}
+                            {athletesWithReports.has(athlete.id) && (
+                              <svg className="w-5 h-5 text-green-600 inline-block ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                              </svg>
+                            )}
+                          </p>
                         </div>
                       </div>
                       <div className="space-y-2 pl-7">
